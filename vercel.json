@@ -22,14 +22,6 @@
         }
       ]
     }
-  ],
-  "env": {
-    "VITE_SUPABASE_URL": "@supabase_url",
-    "VITE_SUPABASE_ANON_KEY": "@supabase_anon_key",
-    "VITE_DAILY_API_KEY": "@daily_api_key",
-    "VITE_ABLY_API_KEY": "@ably_api_key",
-    "VITE_RESEND_API_KEY": "@resend_api_key",
-    "VITE_GOOGLE_PLACES_API_KEY": "@google_places_api_key"
-  }
+  ]
 }
 
