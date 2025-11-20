@@ -1,27 +1,201 @@
-# 🌍 GeoForge - Geological Exploration & Mining Management System
+# 🌍 GeoForge - THE SINGLE MASTER DOCUMENT
 
-**MASTER DOCUMENT - TRANSFORMATION FROM FIELDFORGE TO GEOFORGE**
+**MYCELIAL NETWORK STATUS: This is the ONE truth document for GeoForge**
 
 **Created:** 2025-11-20  
-**Base System:** FieldForge T&D Construction Platform  
-**Target:** Comprehensive Geological Exploration & Mining Management
+**Last Updated:** 2025-11-20  
+**Repository:** https://github.com/jcronkdc/GeoFroge.git  
+**Base System:** FieldForge (/Users/justincronk/Desktop/FieldForge)  
+**Current Status:** Phase 1 Complete, Phase 2 Starting
+
+---
+
+## 🧬 CURRENT MYCELIAL NETWORK STATUS
+
+### COMPLETED FLOWS ✅
+
+| ID | Task | Status | Truth |
+|----|------|--------|-------|
+| GEO-1 | Master Document | ✅ DONE | This document - 904 lines |
+| GEO-2 | Database Schema | ✅ DONE | migrations/001_geological_core_schema.sql - 730 lines, 8 tables |
+| GEO-7 | Documentation | ✅ DONE | README.md, IMPLEMENTATION_ROADMAP.md, PROJECT_STATUS.md created |
+| GEO-GIT | Git Repository | ✅ DONE | https://github.com/jcronkdc/GeoFroge.git - 2 commits pushed |
+
+### ACTIVE FLOWS (Phase 2 - IN PROGRESS)
+
+| ID | Task | Status | Next Action | Files Created |
+|----|------|--------|-------------|---------------|
+| GEO-3 | Core Geological Modules | 🟢 IN PROGRESS | Testing ExplorationProjectDashboard | ✅ src/components/exploration/ExplorationProjectDashboard.tsx (410 lines) |
+| GEO-4 | Sample & Assay System | ⏳ TODO | After GEO-3 complete | - |
+| GEO-5 | Project Management | ⏳ TODO | After GEO-3 complete | - |
+| GEO-6 | 3D Visualization | ⏳ TODO | After GEO-4 complete | - |
+
+### COMPLETED IN THIS SESSION
+
+**ExplorationProjectDashboard** ✅
+- **File**: src/components/exploration/ExplorationProjectDashboard.tsx (410 lines)
+- **Features Built**:
+  - Project card grid with budget tracking
+  - Real-time stats cards (projects, drill locations, samples, budget)
+  - Phase-based color coding (greenfield → mining)
+  - **Collaboration Button** (top-right, always visible)
+  - **Full-screen Collaboration Mode** with toggle
+  - Invite-only badge displayed
+  - Ready for CollaborationHub integration
+- **Mycelial Pathway**: Dashboard → Project Card → Team Call Button → CollaborationHub (video/chat)
+- **ANT TEST STATUS**: ⏳ Needs human test (component created, pathway needs verification)
+
+### BLOCKED FLOWS
+
+| ID | Blocker | Required Action |
+|----|---------|-----------------|
+| NONE | No blockers | Ready to build |
+
+---
+
+## 🐜 ANT METHODOLOGY - VERIFIED PATHWAYS
+
+**Principle**: Like ants finding optimal subway routes, verify COMPLETE pathway end-to-end before assuming it works.
+
+### PATHWAY VERIFICATION CHECKLIST
+✅ **Path Exists**: Route/component/endpoint created  
+✅ **Path Connected**: Wired into parent system  
+✅ **Path Flows**: Data moves end-to-end without breaks  
+✅ **Path Collaborative**: Daily.co video/chat available at node  
+✅ **Path Secure**: Invite-only enforced at database level  
+✅ **Human Tested**: Actual click-through verification  
 
 ---
 
 ## 🎯 TRANSFORMATION OVERVIEW
 
-Taking the robust FieldForge construction platform (authentication, collaboration, real-time features, database) and transforming it into a specialized geological exploration and mining management system.
+Taking FieldForge (T&D construction platform with auth, collaboration, real-time features) and transforming into specialized geological exploration platform.
 
-### Core Capabilities to Build
+### Core Capabilities (Collaborative-First Design)
 
-1. **Mineral Exploration Management**
-2. **Core Analysis & Logging**
-3. **Chemical Assay & Lab Management**
-4. **Field Sample Tracking**
-5. **Geological Mapping & 3D Visualization**
-6. **Project Planning (Exploration → Mining)**
-7. **Resource Estimation & Modeling**
-8. **Environmental & Permitting**
+1. **Mineral Exploration Management** → With team video calls
+2. **Core Analysis & Logging** → With real-time log review sessions
+3. **Chemical Assay & Lab Management** → With results review calls
+4. **Field Sample Tracking** → With field-to-lab video coordination
+5. **Geological Mapping & 3D Visualization** → With cursor control for joint interpretation
+6. **Project Planning (Exploration → Mining)** → With stakeholder video meetings
+7. **Resource Estimation & Modeling** → With technical review sessions
+8. **Environmental & Permitting** → With regulator coordination calls
+
+---
+
+## 🤝 COLLABORATION ARCHITECTURE (Inherited from FieldForge)
+
+**CRITICAL**: Every geological module MUST have collaboration built-in from day one.
+
+### From FieldForge Base System
+
+✅ **Daily.co Video Integration**
+- Video rooms with cursor control
+- Screen sharing for core logs, maps, assays
+- Recording for compliance
+- Knock-to-enter (invite-only)
+
+✅ **Ably Real-Time Messaging**
+- Project team chat channels
+- Direct messages between geologists
+- Typing indicators
+- Online presence
+
+✅ **Invite-Only Security (Database Level)**
+- RLS policies at PostgreSQL level
+- Only project members see project data
+- Can't bypass from application layer
+- Auto-add creator to project team
+
+### Collaboration Pattern for Every Module
+
+```typescript
+// STANDARD PATTERN - Apply to ALL geological components
+
+interface GeologicalModuleProps {
+  projectId: string;
+  showCollaboration?: boolean;
+  onCollaborationToggle?: () => void;
+}
+
+const GeologicalModule: React.FC<GeologicalModuleProps> = ({ 
+  projectId, 
+  showCollaboration,
+  onCollaborationToggle 
+}) => {
+  // 1. Main content
+  // 2. Collaboration button (always visible)
+  // 3. CollaborationHub toggle
+  
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-black">
+      {!showCollaboration ? (
+        <>
+          {/* Module content */}
+          <div className="p-6">
+            {/* Header with collab button */}
+            <div className="flex justify-between items-center mb-6">
+              <h1>Module Name</h1>
+              <button onClick={onCollaborationToggle} className="gradient-button">
+                <Video className="w-5 h-5" />
+                Team Call
+              </button>
+            </div>
+            {/* Main geological interface */}
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Full-screen collaboration */}
+          <CollaborationHub
+            projectId={projectId}
+            contextBanner="Module Name • Feature discussions • Data reviews"
+            onClose={onCollaborationToggle}
+          />
+        </>
+      )}
+    </div>
+  );
+};
+```
+
+### CollaborationHub Features (Already Built in FieldForge)
+
+✅ **Chat Tab**: Team messaging with Ably
+✅ **Video Tab**: Daily.co rooms with cursor control
+✅ **Room Browser**: See active rooms before joining
+✅ **Typing Indicators**: Real-time "X is typing..."
+✅ **Invite System**: RLS-enforced at database
+
+### Mycelial Flow Example: Core Logging with Collaboration
+
+```
+User clicks "Core Logger" 
+  ↓
+Route: /projects/:projectId/core-logging
+  ↓
+CoreLogger.tsx component loads
+  ↓
+Displays: Log intervals + "Field Team Call" button (top-right)
+  ↓
+User clicks "Field Team Call"
+  ↓
+showCollaboration = true
+  ↓
+<CollaborationHub> replaces main content (full-screen)
+  ↓
+Video tab: Create/join room, cursor control active
+Chat tab: Team messaging, typing indicators
+  ↓
+Click "Back" button
+  ↓
+showCollaboration = false
+  ↓
+Returns to core logging interface
+```
+
+**VERIFICATION**: Every pathway must be human-tested with collaboration toggle.
 
 ---
 
