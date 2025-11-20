@@ -10,6 +10,7 @@ import { GradeInterpolationViewerWrapper } from './components/visualization/Grad
 import { BlockModelViewer3DWrapper } from './components/visualization/BlockModelViewer3DWrapper';
 import { ResourceEstimationDashboardWrapper } from './components/resource/ResourceEstimationDashboardWrapper';
 import ProductionDashboard from './components/production/ProductionDashboard';
+import VeinSystemDashboard from './components/vein/VeinSystemDashboard';
 
 function App() {
   const location = useLocation();
@@ -72,8 +73,8 @@ function App() {
         {/* Resource Estimation Dashboard - Phase 5 */}
         <Route path="/projects/:projectId/resource-estimation" element={<ResourceEstimationDashboardWrapper />} />
         
-        {/* Vein Systems - Phase A2 (Coming Soon placeholder) */}
-        <Route path="/projects/:projectId/veins" element={<ProductionDashboard />} />
+        {/* Vein Systems - Phase A2 */}
+        <Route path="/projects/:projectId/veins" element={<VeinSystemDashboard />} />
         
         {/* Geophysics (Coming Soon placeholder) */}
         <Route path="/projects/:projectId/geophysics" element={<ExplorationProjectDashboard />} />
