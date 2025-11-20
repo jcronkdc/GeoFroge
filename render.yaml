@@ -1,0 +1,41 @@
+services:
+  # Backend API (Python FastAPI)
+  - type: web
+    name: geoforge-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    plan: starter
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.14"
+      - key: DATABASE_URL
+        sync: false  # Set this manually in Render dashboard
+      - key: FRONTEND_URL
+        value: https://geoforge-frontend.onrender.com
+
+  # Frontend (Vite + React Static Site)
+  - type: web
+    name: geoforge-frontend
+    runtime: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://geoforge-backend.onrender.com
+      - key: VITE_SUPABASE_URL
+        sync: false  # Set manually
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false  # Set manually
+      - key: VITE_ABLY_API_KEY
+        sync: false  # Set manually (optional)
+      - key: VITE_DAILY_API_KEY
+        sync: false  # Set manually (optional)
+      - key: VITE_ANTHROPIC_API_KEY
+        sync: false  # Set manually (optional)
+      - key: VITE_GROK_API_KEY
+        sync: false  # Set manually (optional)
+      - key: VITE_OPENAI_API_KEY
+        sync: false  # Set manually (optional)
+
