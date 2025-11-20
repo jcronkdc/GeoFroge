@@ -18,7 +18,8 @@ import {
   Users,
   MessageSquare,
   Eye,
-  Map
+  Map,
+  Pickaxe
 } from 'lucide-react';
 
 const LandingPage: React.FC = () => {
@@ -40,6 +41,18 @@ const LandingPage: React.FC = () => {
   }, []);
 
   const features = [
+    {
+      icon: <Pickaxe className="w-8 h-8" />,
+      title: "Production Tracking (NEW!)",
+      description: "30-second shift entry for operating mines. Real-time KPIs: ore mined, grades, gold recovery. Built for Dome Mountain Gold Mine (July 2025 production).",
+      color: "from-orange-500 to-red-500"
+    },
+    {
+      icon: <Layers className="w-8 h-8" />,
+      title: "Multi-Vein Systems (NEW!)",
+      description: "Track 15+ vein systems independently. Vein intersections, true widths, grade accumulation. Boulder Vein producing 15,000 oz Au/year.",
+      color: "from-emerald-500 to-teal-500"
+    },
     {
       icon: <Brain className="w-8 h-8" />,
       title: "AI-Powered Core Analysis",
@@ -153,7 +166,10 @@ const LandingPage: React.FC = () => {
               </span>
             </div>
             <div className="flex items-center gap-6">
-              <button className="text-gray-300 hover:text-white transition-colors">
+              <button 
+                onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+                className="text-gray-300 hover:text-white transition-colors"
+              >
                 Features
               </button>
               <button className="text-gray-300 hover:text-white transition-colors">
@@ -233,7 +249,7 @@ const LandingPage: React.FC = () => {
       </section>
 
       {/* Features Section */}
-      <section className="relative z-10 py-20 px-6">
+      <section id="features" className="relative z-10 py-20 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4">

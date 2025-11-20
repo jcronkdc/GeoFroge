@@ -8,6 +8,7 @@ import { AIAssistant } from './components/ai/AIAssistant';
 import { GradeInterpolationViewerWrapper } from './components/visualization/GradeInterpolationViewerWrapper';
 import { BlockModelViewer3DWrapper } from './components/visualization/BlockModelViewer3DWrapper';
 import { ResourceEstimationDashboardWrapper } from './components/resource/ResourceEstimationDashboardWrapper';
+import ProductionDashboard from './components/production/ProductionDashboard';
 
 function App() {
   const location = useLocation();
@@ -45,8 +46,15 @@ function App() {
         {/* Landing Page */}
         <Route path="/" element={<LandingPage />} />
         
-        {/* Main Dashboard */}
-        <Route path="/dashboard" element={<ExplorationProjectDashboard />} />
+        {/* Main Dashboard - Now shows Production Dashboard */}
+        <Route path="/dashboard" element={<ProductionDashboard />} />
+        
+        {/* Exploration Dashboard */}
+        <Route path="/exploration" element={<ExplorationProjectDashboard />} />
+        
+        {/* Production Tracking - Phase A1 */}
+        <Route path="/production" element={<ProductionDashboard />} />
+        <Route path="/projects/:projectId/production" element={<ProductionDashboard />} />
         
         {/* Drill Hole Management */}
         <Route path="/projects/:projectId/drill-holes" element={<DrillHoleManager />} />
