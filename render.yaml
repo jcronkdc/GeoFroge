@@ -9,11 +9,11 @@ services:
     plan: starter
     envVars:
       - key: PYTHON_VERSION
-        value: "3.14"
+        value: "3.11"
       - key: DATABASE_URL
         sync: false  # Set this manually in Render dashboard
       - key: FRONTEND_URL
-        value: https://geoforge-frontend.onrender.com
+        value: https://geoforge-ikrny6o0n-justins-projects-d7153a8c.vercel.app
 
   # Frontend (Vite + React Static Site)
   - type: web

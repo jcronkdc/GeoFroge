@@ -127,7 +127,10 @@ export const CollaborationHub: React.FC<CollaborationHubProps> = ({
                   Invite-only groups • Real-time sync • Emergency alerts • Field coordination
                 </p>
               </div>
-              <TeamMessaging onStartVideoCall={() => setActiveTab('video')} />
+              <TeamMessaging 
+                projectId={projectId || 'default'} 
+                onStartVideoCall={() => setActiveTab('video')} 
+              />
             </div>
           )}
 

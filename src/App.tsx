@@ -1,11 +1,20 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import LandingPage from './components/landing/LandingPage';
 import { ExplorationProjectDashboard } from './components/exploration/ExplorationProjectDashboard';
 import { DrillHoleManager } from './components/drilling/DrillHoleManager';
 import { CoreLoggingInterface } from './components/logging/CoreLoggingInterface';
+import { AIAssistant } from './components/ai/AIAssistant';
+import { GradeInterpolationViewerWrapper } from './components/visualization/GradeInterpolationViewerWrapper';
+import { BlockModelViewer3DWrapper } from './components/visualization/BlockModelViewer3DWrapper';
+import { ResourceEstimationDashboardWrapper } from './components/resource/ResourceEstimationDashboardWrapper';
 
 function App() {
+  const location = useLocation();
+  
+  // Show AI Assistant on all pages except landing
+  const showAI = location.pathname !== '/';
+  
   return (
     <>
       <Toaster 
@@ -45,9 +54,21 @@ function App() {
         {/* Core Logging */}
         <Route path="/drill-holes/:drillHoleId/core-logs" element={<CoreLoggingInterface />} />
         
+        {/* Grade Interpolation - Phase 4 */}
+        <Route path="/projects/:projectId/grade-interpolation" element={<GradeInterpolationViewerWrapper />} />
+        
+        {/* Block Model Viewer - Phase 5 */}
+        <Route path="/block-models/:blockModelId/view" element={<BlockModelViewer3DWrapper />} />
+        
+        {/* Resource Estimation Dashboard - Phase 5 */}
+        <Route path="/projects/:projectId/resource-estimation" element={<ResourceEstimationDashboardWrapper />} />
+        
         {/* Default redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      
+      {/* God-Mode AI Assistant - Available everywhere except landing */}
+      {showAI && <AIAssistant />}
     </>
   );
 }

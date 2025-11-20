@@ -58,42 +58,57 @@ export const ExplorationProjectDashboard: React.FC<ExplorationProjectDashboardPr
   const loadProjects = async () => {
     try {
       setLoading(true);
-      // TODO: Connect to Supabase API
-      // const response = await fetch('/api/exploration/projects');
-      // const data = await response.json();
       
-      // Demo data for now
-      const demoProjects: Project[] = [
-        {
-          id: '1',
-          project_code: 'AU-001',
-          project_name: 'Golden Eagle Prospect',
-          commodity_target: ['gold', 'silver'],
-          current_phase: 'advanced',
-          budget_total: 500000,
-          budget_spent: 245000,
-          location_name: 'Nevada, USA',
-          latitude: 39.5,
-          longitude: -116.8,
-          status: 'active'
-        },
-        {
-          id: '2',
-          project_code: 'CU-002',
-          project_name: 'Red Mountain Copper',
-          commodity_target: ['copper', 'molybdenum'],
-          current_phase: 'grassroots',
-          budget_total: 750000,
-          budget_spent: 125000,
-          location_name: 'Arizona, USA',
-          latitude: 34.2,
-          longitude: -111.5,
-          status: 'active'
+      // API URL (use environment variable or default to localhost)
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      
+      try {
+        // Try to fetch from FastAPI backend
+        const response = await fetch(`${apiUrl}/api/projects`);
+        
+        if (!response.ok) {
+          throw new Error(`API returned ${response.status}`);
         }
-      ];
-      
-      setProjects(demoProjects);
-      setLoading(false);
+        
+        const data = await response.json();
+        setProjects(data.projects || []);
+        setLoading(false);
+      } catch (apiError) {
+        console.warn('Failed to load from API, using demo data:', apiError);
+        
+        // Fallback to demo data if API unavailable
+        const demoProjects: Project[] = [
+          {
+            id: '1',
+            project_code: 'AU-001',
+            project_name: 'Golden Eagle Prospect',
+            commodity_target: ['gold', 'silver'],
+            current_phase: 'advanced',
+            budget_total: 500000,
+            budget_spent: 245000,
+            location_name: 'Nevada, USA',
+            latitude: 39.5,
+            longitude: -116.8,
+            status: 'active'
+          },
+          {
+            id: '2',
+            project_code: 'CU-002',
+            project_name: 'Red Mountain Copper',
+            commodity_target: ['copper', 'molybdenum'],
+            current_phase: 'grassroots',
+            budget_total: 750000,
+            budget_spent: 125000,
+            location_name: 'Arizona, USA',
+            latitude: 34.2,
+            longitude: -111.5,
+            status: 'active'
+          }
+        ];
+        
+        setProjects(demoProjects);
+        setLoading(false);
+      }
     } catch (error) {
       console.error('Failed to load projects:', error);
       setLoading(false);

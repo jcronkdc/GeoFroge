@@ -122,6 +122,48 @@ class ResourceEstimateRequest(BaseModel):
     qualified_person: Optional[str] = None
 
 
+class EconomicScenarioRequest(BaseModel):
+    project_id: str
+    scenario_name: str
+    description: Optional[str] = None
+    is_base_case: Optional[bool] = False
+    
+    # Metal prices
+    au_price_usd_oz: Optional[float] = 1800
+    ag_price_usd_oz: Optional[float] = 24
+    cu_price_usd_lb: Optional[float] = 3.50
+    
+    # Operating costs
+    mining_cost_per_tonne: Optional[float] = 3.0
+    processing_cost_per_tonne: Optional[float] = 15.0
+    g_and_a_cost_per_tonne: Optional[float] = 2.0
+    
+    # Capital costs
+    initial_capex: Optional[float] = 50000000
+    sustaining_capex_per_year: Optional[float] = 5000000
+    closure_cost: Optional[float] = 10000000
+    
+    # Metallurgy
+    au_recovery_rate: Optional[float] = 0.85
+    dilution_factor: Optional[float] = 0.05
+    mining_loss_factor: Optional[float] = 0.03
+    
+    # Financial
+    discount_rate: Optional[float] = 0.10
+    
+    # Mine design
+    overall_pit_slope: Optional[float] = 45.0
+    mining_rate_tpd: Optional[float] = 50000
+    processing_rate_tpd: Optional[float] = 15000
+
+
+class PitShellRequest(BaseModel):
+    block_model_id: str
+    shell_name: str
+    economic_scenario_id: str
+    shell_number: Optional[int] = 1
+
+
 # ==================== ENDPOINTS ====================
 
 @app.get("/")
@@ -1441,6 +1483,241 @@ def list_resource_estimates(block_model_id: Optional[str] = None):
             status_code=500,
             detail=f"Failed to fetch resource estimates: {str(e)}"
         )
+
+
+# ==========================================
+# PRODUCTION TRACKING ENDPOINTS (Phase A1)
+# For: Dome Mountain Gold Mine
+# ==========================================
+
+class ProductionRecordCreate(BaseModel):
+    project_id: str
+    production_date: str
+    shift_type: str
+    stope_name: Optional[str] = None
+    ore_tonnes: float = 0
+    waste_tonnes: float = 0
+    au_grade_gt: Optional[float] = None
+    ag_grade_gt: Optional[float] = None
+    contractor_name: Optional[str] = None
+    notes: Optional[str] = None
+
+class ProductionTargetCreate(BaseModel):
+    project_id: str
+    target_year: int
+    target_month: int
+    target_au_ounces: float
+
+
+@app.get("/api/production/records")
+def get_production_records(project_id: Optional[str] = None, limit: int = 50):
+    """Get production records with optional project filter"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        if project_id:
+            cur.execute("""
+                SELECT 
+                    pr.id,
+                    pr.project_id,
+                    pr.production_date,
+                    pr.shift_type,
+                    pr.stope_name,
+                    pr.ore_tonnes,
+                    pr.waste_tonnes,
+                    pr.au_grade_gt,
+                    pr.ag_grade_gt,
+                    pr.contractor_name,
+                    pr.status,
+                    pr.notes,
+                    pr.created_at,
+                    ep.project_name
+                FROM production_records pr
+                JOIN exploration_projects ep ON pr.project_id = ep.id
+                WHERE pr.project_id = %s
+                ORDER BY pr.production_date DESC, pr.created_at DESC
+                LIMIT %s
+            """, (project_id, limit))
+        else:
+            cur.execute("""
+                SELECT 
+                    pr.id,
+                    pr.project_id,
+                    pr.production_date,
+                    pr.shift_type,
+                    pr.stope_name,
+                    pr.ore_tonnes,
+                    pr.waste_tonnes,
+                    pr.au_grade_gt,
+                    pr.ag_grade_gt,
+                    pr.contractor_name,
+                    pr.status,
+                    pr.notes,
+                    pr.created_at,
+                    ep.project_name
+                FROM production_records pr
+                JOIN exploration_projects ep ON pr.project_id = ep.id
+                ORDER BY pr.production_date DESC, pr.created_at DESC
+                LIMIT %s
+            """, (limit,))
+        
+        records = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        return {"records": records, "count": len(records)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch production records: {str(e)}")
+
+
+@app.post("/api/production/records")
+def create_production_record(record: ProductionRecordCreate):
+    """Create a new production record (shift entry)"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            INSERT INTO production_records (
+                project_id, production_date, shift_type, stope_name,
+                ore_tonnes, waste_tonnes, au_grade_gt, ag_grade_gt,
+                contractor_name, notes, status
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'completed')
+            RETURNING id, production_date, shift_type, ore_tonnes, au_grade_gt
+        """, (
+            record.project_id,
+            record.production_date,
+            record.shift_type,
+            record.stope_name,
+            record.ore_tonnes,
+            record.waste_tonnes,
+            record.au_grade_gt,
+            record.ag_grade_gt,
+            record.contractor_name,
+            record.notes
+        ))
+        
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": "Production record created",
+            "record": result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create production record: {str(e)}")
+
+
+@app.get("/api/production/summary")
+def get_production_summary(project_id: str):
+    """Get production summary/KPIs for a project"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Get totals and averages
+        cur.execute("""
+            SELECT 
+                COUNT(*) as shift_count,
+                SUM(ore_tonnes) as total_ore,
+                SUM(waste_tonnes) as total_waste,
+                AVG(au_grade_gt) as avg_au_grade,
+                AVG(ag_grade_gt) as avg_ag_grade,
+                SUM(ore_tonnes * au_grade_gt * 0.0321507466) as estimated_au_ounces,
+                SUM(ore_tonnes * ag_grade_gt * 0.0321507466) as estimated_ag_ounces
+            FROM production_records
+            WHERE project_id = %s AND status = 'completed'
+        """, (project_id,))
+        
+        summary = cur.fetchone()
+        
+        # Get monthly target
+        cur.execute("""
+            SELECT target_au_ounces, target_year, target_month
+            FROM production_targets
+            WHERE project_id = %s
+            ORDER BY target_year DESC, target_month DESC
+            LIMIT 1
+        """, (project_id,))
+        
+        target = cur.fetchone()
+        
+        cur.close()
+        conn.close()
+        
+        return {
+            "summary": summary,
+            "target": target,
+            "achievement_percent": (
+                (summary['estimated_au_ounces'] / target['target_au_ounces'] * 100) 
+                if target and target['target_au_ounces'] > 0 
+                else 0
+            )
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch production summary: {str(e)}")
+
+
+@app.get("/api/production/targets")
+def get_production_targets(project_id: str):
+    """Get production targets for a project"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT 
+                id, project_id, target_year, target_month, 
+                target_au_ounces, status, created_at
+            FROM production_targets
+            WHERE project_id = %s
+            ORDER BY target_year DESC, target_month DESC
+        """, (project_id,))
+        
+        targets = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        return {"targets": targets, "count": len(targets)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch production targets: {str(e)}")
+
+
+@app.post("/api/production/targets")
+def create_production_target(target: ProductionTargetCreate):
+    """Create a new production target"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            INSERT INTO production_targets (
+                project_id, target_year, target_month, target_au_ounces
+            ) VALUES (%s, %s, %s, %s)
+            RETURNING id, target_year, target_month, target_au_ounces
+        """, (
+            target.project_id,
+            target.target_year,
+            target.target_month,
+            target.target_au_ounces
+        ))
+        
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": "Production target created",
+            "target": result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create production target: {str(e)}")
 
 
 if __name__ == "__main__":
