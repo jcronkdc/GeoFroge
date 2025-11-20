@@ -1,0 +1,112 @@
+/* GeoForge - Geological Exploration Platform Styles */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-earth-700;
+  }
+  
+  body {
+    @apply bg-gradient-to-br from-earth-950 via-rock-900 to-black text-earth-100;
+    @apply font-body;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-semibold;
+  }
+}
+
+@layer components {
+  /* Geological gradient button */
+  .gradient-button {
+    @apply bg-gradient-to-r from-gold-600 to-copper-600;
+    @apply hover:from-gold-500 hover:to-copper-500;
+    @apply text-white font-medium px-4 py-2 rounded-lg;
+    @apply transition-all duration-200;
+    @apply shadow-lg hover:shadow-outer-glow;
+    @apply flex items-center gap-2;
+  }
+  
+  /* Geological card */
+  .geo-card {
+    @apply bg-gradient-to-br from-rock-800/50 to-earth-900/50;
+    @apply border border-earth-700/50 rounded-xl;
+    @apply shadow-inner-glow;
+    @apply backdrop-blur-sm;
+  }
+  
+  /* Status badges */
+  .status-badge {
+    @apply px-3 py-1 rounded-full text-sm font-medium;
+  }
+  
+  .status-drilling {
+    @apply bg-gold-500/20 text-gold-300 border border-gold-500/30;
+  }
+  
+  .status-complete {
+    @apply bg-mineral-500/20 text-mineral-300 border border-mineral-500/30;
+  }
+  
+  .status-planned {
+    @apply bg-earth-500/20 text-earth-300 border border-earth-500/30;
+  }
+  
+  .status-abandoned {
+    @apply bg-copper-500/20 text-copper-300 border border-copper-500/30;
+  }
+  
+  /* Geological data grid */
+  .data-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+  }
+  
+  /* Input styling */
+  .geo-input {
+    @apply bg-rock-900/50 border border-earth-700 rounded-lg px-4 py-2;
+    @apply text-earth-100 placeholder-earth-500;
+    @apply focus:outline-none focus:ring-2 focus:ring-gold-500/50;
+    @apply transition-all duration-200;
+  }
+  
+  /* Tab styling */
+  .geo-tab {
+    @apply px-6 py-3 rounded-t-lg font-medium transition-all duration-200;
+  }
+  
+  .geo-tab-active {
+    @apply bg-gradient-to-b from-rock-700/50 to-rock-800/50 text-gold-300 border-b-2 border-gold-500;
+  }
+  
+  .geo-tab-inactive {
+    @apply bg-rock-900/30 text-earth-400 hover:text-earth-200 hover:bg-rock-800/30;
+  }
+  
+  /* Scrollbar styling */
+  .geo-scrollbar::-webkit-scrollbar {
+    @apply w-2;
+  }
+  
+  .geo-scrollbar::-webkit-scrollbar-track {
+    @apply bg-rock-900/50 rounded-full;
+  }
+  
+  .geo-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-earth-700 rounded-full hover:bg-earth-600;
+  }
+}
+
+@layer utilities {
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+  
+  .bg-blur {
+    backdrop-filter: blur(10px);
+  }
+}
+

@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Video, MapPin, Layers, DollarSign, Calendar, Users, TrendingUp } from 'lucide-react';
+import { CollaborationHub } from '../collaboration/CollaborationHub';
 
 /**
  * ExplorationProjectDashboard - Main geological project management interface
@@ -39,12 +41,14 @@ interface ExplorationProjectDashboardProps {
 }
 
 export const ExplorationProjectDashboard: React.FC<ExplorationProjectDashboardProps> = ({
-  showCollaboration = false,
-  onCollaborationToggle
+  showCollaboration: externalShowCollaboration = false,
+  onCollaborationToggle: externalCollaborationToggle
 }) => {
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [showCollaboration, setShowCollaboration] = useState(false);
 
   // Load projects from API
   useEffect(() => {
@@ -112,57 +116,20 @@ export const ExplorationProjectDashboard: React.FC<ExplorationProjectDashboardPr
     return colors[phase] || 'from-gray-500 to-gray-600';
   };
 
-  if (showCollaboration) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-black">
-        {/* Full-screen Collaboration Mode */}
-        <div className="p-6">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-4 mb-6">
-            <div className="flex items-center justify-between text-white">
-              <div className="flex items-center gap-3">
-                <Video className="w-6 h-6" />
-                <div>
-                  <h2 className="text-xl font-bold">Project Team Collaboration</h2>
-                  <p className="text-sm opacity-90">
-                    Project planning • Budget reviews • Team coordination • Target discussions
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={onCollaborationToggle}
-                className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
-              >
-                ← Back to Dashboard
-              </button>
-            </div>
-          </div>
+  const handleCollaborationToggle = () => {
+    setShowCollaboration(!showCollaboration);
+    if (externalCollaborationToggle) {
+      externalCollaborationToggle();
+    }
+  };
 
-          {/* TODO: Wire in CollaborationHub component from FieldForge */}
-          <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-8 text-center">
-            <div className="max-w-md mx-auto">
-              <Video className="w-16 h-16 text-blue-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-white mb-2">
-                CollaborationHub Integration
-              </h3>
-              <p className="text-gray-400 mb-4">
-                This will load the full CollaborationHub component from FieldForge with:
-              </p>
-              <ul className="text-left text-gray-300 space-y-2 mb-6">
-                <li>✅ Real-time team chat (Ably messaging)</li>
-                <li>✅ Video rooms with cursor control (Daily.co)</li>
-                <li>✅ Screen sharing for reviewing geological data</li>
-                <li>✅ Recording for compliance</li>
-                <li>✅ Invite-only project access (RLS enforced)</li>
-              </ul>
-              <div className="bg-amber-500/10 border border-amber-500/30 rounded p-3">
-                <p className="text-sm text-amber-300">
-                  <strong>Next Step:</strong> Copy CollaborationHub.tsx from FieldForge and wire it here
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+  if (externalShowCollaboration || showCollaboration) {
+    return (
+      <CollaborationHub
+        projectId={selectedProject || 'demo'}
+        contextBanner="Exploration Projects • Team Planning • Budget Reviews • Target Discussions"
+        onClose={handleCollaborationToggle}
+      />
     );
   }
 
@@ -182,7 +149,7 @@ export const ExplorationProjectDashboard: React.FC<ExplorationProjectDashboardPr
 
           {/* COLLABORATION BUTTON - Always Visible */}
           <button
-            onClick={onCollaborationToggle}
+            onClick={handleCollaborationToggle}
             className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg transition-all shadow-lg shadow-blue-500/25"
           >
             <Video className="w-5 h-5" />
@@ -242,6 +209,7 @@ export const ExplorationProjectDashboard: React.FC<ExplorationProjectDashboardPr
                 project={project}
                 onSelect={() => setSelectedProject(project.id)}
                 selected={selectedProject === project.id}
+                onViewDrillHoles={(projectId) => navigate(`/projects/${projectId}/drill-holes`)}
               />
             ))
           )}
@@ -274,9 +242,10 @@ interface ProjectCardProps {
   project: Project;
   onSelect: () => void;
   selected: boolean;
+  onViewDrillHoles: (projectId: string) => void;
 }
 
-const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, selected }) => {
+const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, selected, onViewDrillHoles }) => {
   const budgetPercent = Math.round((project.budget_spent / project.budget_total) * 100);
   const phaseColor = {
     'greenfield': 'from-green-500 to-emerald-600',
@@ -336,8 +305,20 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ project, onSelect, selected }
 
       {/* Action Buttons */}
       <div className="flex gap-2">
-        <button className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm">
+        <button 
+          onClick={() => console.log('View details:', project.id)}
+          className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm"
+        >
           View Details
+        </button>
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewDrillHoles(project.id);
+          }}
+          className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
+        >
+          View Drill Holes
         </button>
         <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-lg transition-colors text-sm">
           <Users className="w-4 h-4" />
