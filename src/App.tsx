@@ -11,6 +11,7 @@ import { BlockModelViewer3DWrapper } from './components/visualization/BlockModel
 import { ResourceEstimationDashboardWrapper } from './components/resource/ResourceEstimationDashboardWrapper';
 import ProductionDashboard from './components/production/ProductionDashboard';
 import VeinSystemDashboard from './components/vein/VeinSystemDashboard';
+import GeophysicsDashboard from './components/geophysics/GeophysicsDashboard';
 
 function App() {
   const location = useLocation();
@@ -76,8 +77,8 @@ function App() {
         {/* Vein Systems - Phase A2 */}
         <Route path="/projects/:projectId/veins" element={<VeinSystemDashboard />} />
         
-        {/* Geophysics (Coming Soon placeholder) */}
-        <Route path="/projects/:projectId/geophysics" element={<ExplorationProjectDashboard />} />
+        {/* Geophysics - Phase A3 */}
+        <Route path="/projects/:projectId/geophysics" element={<GeophysicsDashboard />} />
         
         {/* Default redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />

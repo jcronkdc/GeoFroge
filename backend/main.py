@@ -1720,6 +1720,358 @@ def create_production_target(target: ProductionTargetCreate):
         raise HTTPException(status_code=500, detail=f"Failed to create production target: {str(e)}")
 
 
+# ==========================================
+# GEOPHYSICS ENDPOINTS (Phase A3)
+# For: Geophysical Survey Management
+# ==========================================
+
+class GeophysicalSurveyCreate(BaseModel):
+    project_id: str
+    survey_name: str
+    survey_type: str  # magnetic, gravity, ip, em, resistivity, seismic, radiometric, other
+    survey_date: Optional[str] = None
+    contractor_name: Optional[str] = None
+    description: Optional[str] = None
+    acquisition_method: Optional[str] = None  # airborne, ground, borehole, marine
+    line_spacing_m: Optional[float] = None
+    station_spacing_m: Optional[float] = None
+    terrain_clearance_m: Optional[float] = None
+    instrument_type: Optional[str] = None
+    total_line_km: Optional[float] = None
+    total_stations: Optional[int] = None
+
+
+class GeophysicalReadingCreate(BaseModel):
+    survey_id: str
+    station_id: Optional[str] = None
+    line_id: Optional[str] = None
+    easting: float
+    northing: float
+    elevation: Optional[float] = None
+    total_magnetic_field_nt: Optional[float] = None
+    bouguer_gravity_mgal: Optional[float] = None
+    chargeability_mv_v: Optional[float] = None
+    resistivity_ohm_m: Optional[float] = None
+    em_conductivity_s_m: Optional[float] = None
+
+
+class GeophysicalInterpretationCreate(BaseModel):
+    survey_id: str
+    interpretation_name: str
+    feature_type: str
+    anomaly_amplitude: Optional[float] = None
+    estimated_depth_m: Optional[float] = None
+    geological_significance: Optional[str] = None
+    target_type: Optional[str] = None
+    drill_priority: Optional[str] = "low"
+    confidence_level: Optional[str] = "moderate"
+
+
+@app.get("/api/geophysics/surveys")
+def get_geophysical_surveys(project_id: Optional[str] = None):
+    """Get all geophysical surveys, optionally filtered by project"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        if project_id:
+            cur.execute("""
+                SELECT * FROM v_geophysics_survey_summary
+                WHERE project_id = %s
+                ORDER BY survey_date DESC
+            """, (project_id,))
+        else:
+            cur.execute("""
+                SELECT * FROM v_geophysics_survey_summary
+                ORDER BY survey_date DESC
+            """)
+        
+        surveys = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        return {"surveys": surveys, "count": len(surveys)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch surveys: {str(e)}")
+
+
+@app.get("/api/geophysics/surveys/{survey_id}")
+def get_geophysical_survey(survey_id: str):
+    """Get single geophysical survey by ID"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT 
+                id, project_id, survey_name, survey_type, survey_date,
+                contractor_name, description, acquisition_method,
+                line_spacing_m, station_spacing_m, terrain_clearance_m,
+                instrument_type, total_line_km, total_stations,
+                processing_level, status, data_quality_score,
+                min_easting, max_easting, min_northing, max_northing,
+                created_at, updated_at
+            FROM geophysical_surveys
+            WHERE id = %s
+        """, (survey_id,))
+        
+        survey = cur.fetchone()
+        cur.close()
+        conn.close()
+        
+        if not survey:
+            raise HTTPException(status_code=404, detail="Survey not found")
+        
+        return {"survey": survey}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch survey: {str(e)}")
+
+
+@app.post("/api/geophysics/surveys")
+def create_geophysical_survey(survey: GeophysicalSurveyCreate):
+    """Create a new geophysical survey"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            INSERT INTO geophysical_surveys (
+                project_id, survey_name, survey_type, survey_date,
+                contractor_name, description, acquisition_method,
+                line_spacing_m, station_spacing_m, terrain_clearance_m,
+                instrument_type, total_line_km, total_stations, status
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'planned')
+            RETURNING id, survey_name, survey_type, created_at
+        """, (
+            survey.project_id,
+            survey.survey_name,
+            survey.survey_type,
+            survey.survey_date,
+            survey.contractor_name,
+            survey.description,
+            survey.acquisition_method,
+            survey.line_spacing_m,
+            survey.station_spacing_m,
+            survey.terrain_clearance_m,
+            survey.instrument_type,
+            survey.total_line_km,
+            survey.total_stations
+        ))
+        
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": "Geophysical survey created",
+            "survey": result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create survey: {str(e)}")
+
+
+@app.get("/api/geophysics/surveys/{survey_id}/readings")
+def get_survey_readings(survey_id: str, limit: int = 1000):
+    """Get readings for a specific survey"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT 
+                id, station_id, line_id, easting, northing, elevation,
+                total_magnetic_field_nt, bouguer_gravity_mgal,
+                chargeability_mv_v, resistivity_ohm_m, em_conductivity_s_m,
+                quality_flag, created_at
+            FROM geophysical_readings
+            WHERE survey_id = %s
+            ORDER BY line_id, station_id
+            LIMIT %s
+        """, (survey_id, limit))
+        
+        readings = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        return {"readings": readings, "count": len(readings)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch readings: {str(e)}")
+
+
+@app.post("/api/geophysics/readings")
+def create_geophysical_reading(reading: GeophysicalReadingCreate):
+    """Create a new geophysical reading"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            INSERT INTO geophysical_readings (
+                survey_id, station_id, line_id, easting, northing, elevation,
+                total_magnetic_field_nt, bouguer_gravity_mgal,
+                chargeability_mv_v, resistivity_ohm_m, em_conductivity_s_m,
+                location
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                      ST_SetSRID(ST_MakePoint(%s, %s, COALESCE(%s, 0)), 4326))
+            RETURNING id, station_id, easting, northing
+        """, (
+            reading.survey_id,
+            reading.station_id,
+            reading.line_id,
+            reading.easting,
+            reading.northing,
+            reading.elevation,
+            reading.total_magnetic_field_nt,
+            reading.bouguer_gravity_mgal,
+            reading.chargeability_mv_v,
+            reading.resistivity_ohm_m,
+            reading.em_conductivity_s_m,
+            reading.easting,
+            reading.northing,
+            reading.elevation
+        ))
+        
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": "Reading created",
+            "reading": result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create reading: {str(e)}")
+
+
+@app.get("/api/geophysics/interpretations")
+def get_interpretations(survey_id: Optional[str] = None, priority: Optional[str] = None):
+    """Get geophysical interpretations"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        query = """
+            SELECT 
+                id, survey_id, interpretation_name, feature_type,
+                anomaly_amplitude, estimated_depth_m, geological_significance,
+                target_type, drill_priority, confidence_level,
+                ST_AsGeoJSON(feature_geometry) as geometry_json,
+                created_at, updated_at
+            FROM geophysical_interpretations
+            WHERE 1=1
+        """
+        params = []
+        
+        if survey_id:
+            query += " AND survey_id = %s"
+            params.append(survey_id)
+        
+        if priority:
+            query += " AND drill_priority = %s"
+            params.append(priority)
+        
+        query += " ORDER BY drill_priority, created_at DESC"
+        
+        cur.execute(query, params)
+        interpretations = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        return {"interpretations": interpretations, "count": len(interpretations)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch interpretations: {str(e)}")
+
+
+@app.post("/api/geophysics/interpretations")
+def create_interpretation(interp: GeophysicalInterpretationCreate):
+    """Create a new geophysical interpretation"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            INSERT INTO geophysical_interpretations (
+                survey_id, interpretation_name, feature_type,
+                anomaly_amplitude, estimated_depth_m, geological_significance,
+                target_type, drill_priority, confidence_level
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id, interpretation_name, drill_priority
+        """, (
+            interp.survey_id,
+            interp.interpretation_name,
+            interp.feature_type,
+            interp.anomaly_amplitude,
+            interp.estimated_depth_m,
+            interp.geological_significance,
+            interp.target_type,
+            interp.drill_priority,
+            interp.confidence_level
+        ))
+        
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": "Interpretation created",
+            "interpretation": result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create interpretation: {str(e)}")
+
+
+@app.get("/api/geophysics/summary/{project_id}")
+def get_geophysics_summary(project_id: str):
+    """Get summary statistics for project geophysics"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Get survey counts by type
+        cur.execute("""
+            SELECT 
+                COUNT(*) as total_surveys,
+                COUNT(CASE WHEN survey_type = 'magnetic' THEN 1 END) as magnetic_surveys,
+                COUNT(CASE WHEN survey_type = 'gravity' THEN 1 END) as gravity_surveys,
+                COUNT(CASE WHEN survey_type = 'ip' THEN 1 END) as ip_surveys,
+                COUNT(CASE WHEN survey_type = 'em' THEN 1 END) as em_surveys,
+                SUM(total_line_km) as total_km_surveyed,
+                SUM(total_stations) as total_stations
+            FROM geophysical_surveys
+            WHERE project_id = %s
+        """, (project_id,))
+        
+        summary = cur.fetchone()
+        
+        # Get high priority targets
+        cur.execute("""
+            SELECT COUNT(*) as high_priority_targets
+            FROM geophysical_interpretations gi
+            JOIN geophysical_surveys gs ON gi.survey_id = gs.id
+            WHERE gs.project_id = %s AND gi.drill_priority = 'high'
+        """, (project_id,))
+        
+        targets = cur.fetchone()
+        
+        cur.close()
+        conn.close()
+        
+        return {
+            "summary": dict(summary) if summary else {},
+            "high_priority_targets": targets['high_priority_targets'] if targets else 0
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch geophysics summary: {str(e)}")
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
