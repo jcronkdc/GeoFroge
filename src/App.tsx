@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import LandingPage from './components/landing/LandingPage';
 import { ExplorationProjectDashboard } from './components/exploration/ExplorationProjectDashboard';
 import { DrillHoleManager } from './components/drilling/DrillHoleManager';
 import { CoreLoggingInterface } from './components/logging/CoreLoggingInterface';
@@ -32,8 +33,11 @@ function App() {
       />
       
       <Routes>
+        {/* Landing Page */}
+        <Route path="/" element={<LandingPage />} />
+        
         {/* Main Dashboard */}
-        <Route path="/" element={<ExplorationProjectDashboard />} />
+        <Route path="/dashboard" element={<ExplorationProjectDashboard />} />
         
         {/* Drill Hole Management */}
         <Route path="/projects/:projectId/drill-holes" element={<DrillHoleManager />} />

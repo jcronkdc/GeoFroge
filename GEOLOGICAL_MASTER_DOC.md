@@ -136,8 +136,8 @@ http://localhost:5173/
 6. ⚠️ No environment variables yet
 7. ⚠️ Dependencies not installed yet (npm install needed)
 
-**✅ ENVIRONMENT CONFIGURED (2025-11-20 - UPDATED WITH AI KEYS)**
-1. ✅ Environment variables configured (.env.local file - 1.1 KB)
+**✅ ENVIRONMENT CONFIGURED (2025-11-20 - COMPLETE AI STACK)**
+1. ✅ Environment variables configured (.env.local file - 1.5 KB)
 2. ✅ Daily.co API key: 8e48004b61c4a821639bc0e758f3b8f9a98401b6098f1d0d80edd988c742a15c
 3. ✅ Ably API key: 5VgiQQ.5m0sdg:09jLRjTeJpfN35J0zcRNb8CWbmNgjfaZETFk60d_fW8
 4. ✅ Resend API key: re_2hMbK7Jr_5zCdrSP8i1TiJsvx2xcL84m9
@@ -145,6 +145,8 @@ http://localhost:5173/
 6. ✅ Supabase connection configured (kdqkquhyumqoolvhfzwq.supabase.co)
 7. ✅ **Grok AI API key**: xai-NP2XHMn2Y33tHIrF9Vozsr3aXv4Jk8PghjqQZiBKzpEhqa3J3I0sjF54yFBjdvNZHioQcxrIDxocrSip
 8. ✅ **OpenAI API key**: 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
+9. ✅ **Anthropic Claude API key**: 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
+10. ✅ **Weather API key**: bc0e32bc4d58821102a9ceee6f7d4f46
 
 **🚫 NOT STARTED YET**
 1. 🚫 Backend API endpoints
@@ -157,6 +159,7 @@ http://localhost:5173/
 - ✅ Production URL LIVE: https://geoforge-7yymvuzc8-justins-projects-d7153a8c.vercel.app
 - ✅ Build verified: 6.66s, 1,701 modules, 0 vulnerabilities
 - ✅ HTTP Status: 200 OK (Vercel CDN serving content)
+- ✅ **LANDING PAGE DEPLOYED**: Glassmorphism design with AI features, competitive advantages
 - ⚠️ Environment variables need to be added via Vercel Dashboard for full functionality
 
 **✅ BUILD VERIFIED (2025-11-20 - LATEST)**
@@ -482,6 +485,8 @@ Google Places:   re_2hMbK7Jr_5zCdrSP8i1TiJsvx2xcL84m9
 Supabase:        kdqkquhyumqoolvhfzwq.supabase.co
 Grok AI:         xai-NP2XHMn2Y33tHIrF9Vozsr3aXv4Jk8PghjqQZiBKzpEhqa3J3I0sjF54yFBjdvNZHioQcxrIDxocrSip
 OpenAI:          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
+Anthropic:       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
+Weather:         bc0e32bc4d58821102a9ceee6f7d4f46
 ```
 
 **Mycelial Verification:**
@@ -574,6 +579,101 @@ Field geologist logs core → Sees complex mineralization → Clicks "Review Cal
 **Total Code Added This Module:** 550 lines (CoreLoggingInterface.tsx)  
 **Total Components:** 7 (was 6, now 7)  
 **Total Lines Built Today:** 2,282 (was 1,732, added 550)
+
+---
+
+### 🆕 PHASE 1.9 - HYBRID AI ARCHITECTURE (CRITICAL - 2025-11-20)
+
+**Hybrid AI System** ✅ DESIGNED (Implementation Pending)
+- Path: `HYBRID_AI_ARCHITECTURE.md` (9,000+ words comprehensive spec)
+- Status: ✅ Architecture complete, ready for implementation
+- **Critical Requirement**: NDA Compliance for Enterprise Customers
+
+**Two AI Modes**:
+1. **🔒 LOCAL MODE (Private/NDA Compliant)**
+   - AI runs on company servers (Ollama + Llama 3.3 70B)
+   - Data NEVER leaves company network
+   - 100% NDA compliant
+   - FREE after initial hardware investment (~$5-15K one-time)
+   - Offline-capable (air-gap ready)
+   - Performance: Matches GPT-4 quality
+
+2. **🌐 CLOUD MODE (Internet-Enabled)**
+   - Uses external APIs (Claude, GPT-4, Grok)
+   - Can access web resources for research
+   - Latest AI models
+   - Requires NDA approval
+   - Per-token costs (~$37K/year for heavy use)
+
+**Why This Is CRITICAL**:
+- ✅ **Enterprise blocker removed**: Companies with NDAs can use AI safely
+- ✅ **Cost savings**: Local mode pays for itself in 6 months
+- ✅ **Flexibility**: Switch modes based on data sensitivity
+- ✅ **Competitive advantage**: NO other geological software offers this
+- ✅ **Market differentiator**: Can sell to mining majors with strict NDAs
+
+**Architecture Highlights**:
+- Unified AIService.ts interface (same API for both modes)
+- UI toggle for mode selection with security warnings
+- Ollama integration for local inference
+- Llama 3.3 70B model (70B parameters, 128K context, GPT-4 equivalent)
+- Cloud mode with web search capabilities
+- Seamless mode switching without code changes
+
+**Hardware Requirements - Local Mode**:
+- **Minimum** (Llama 3.1 8B): 16GB RAM, optional GPU
+- **Recommended** (Llama 3.3 70B): 64GB RAM, 2x RTX 4090 (48GB VRAM)
+- **Enterprise** (DeepSeek V3 671B): 128GB RAM, 4x H100 (320GB VRAM)
+
+**Implementation Timeline**: 4 weeks
+- Week 1: Ollama setup + Llama 3.3 70B testing
+- Week 2: Unified AI service layer (AIService.ts, OllamaService.ts)
+- Week 3: UI components + testing & optimization
+- Week 4: Security audit + production deployment
+
+**Security & Compliance**:
+| Requirement | Local Mode | Cloud Mode |
+|-------------|------------|------------|
+| **NDA Compliant** | ✅ Yes | ⚠️ Requires approval |
+| **Data Residency** | ✅ On-premises | ❌ External servers |
+| **GDPR Compliant** | ✅ Yes | ⚠️ Review required |
+| **Air-Gap Ready** | ✅ Yes | ❌ No |
+| **Audit Trail** | ✅ Local logs | ⚠️ Provider logs |
+
+**Cost Comparison**:
+- **Local**: $5-15K one-time + $1K/year = ~$16K over 10 years
+- **Cloud**: $37K/year = $370K over 10 years
+- **Savings**: $354K over 10 years with local mode
+
+**Next Steps** (for next agent):
+1. Install Ollama on development server: `curl -fsSL https://ollama.com/install.sh | sh`
+2. Pull Llama 3.3 70B model: `ollama pull llama3.3:70b`
+3. Build OllamaService.ts integration layer
+4. Create AIModeSelector UI component
+5. Build unified AIService.ts with mode switching
+6. Security audit and legal review
+7. Performance benchmarks (local vs cloud)
+8. Client demo showing both modes
+
+**BRUTAL TRUTH**:
+- ✅ Architecture designed (32-page comprehensive spec)
+- ✅ Local AI solution identified (Ollama + Llama 3.3 70B)
+- ✅ Unified service interface designed
+- ✅ Security requirements documented
+- ✅ Cost analysis complete
+- ⚠️ **NOT YET IMPLEMENTED** (code not written)
+- ⚠️ Ollama not yet installed
+- ⚠️ Needs ~4 weeks development time
+- ⚠️ Requires GPU server for optimal performance
+
+**Total Code to Write**: ~2,500 lines
+- OllamaService.ts: 500 lines (local AI integration)
+- AIService.ts (unified): 700 lines (mode switching logic)
+- AIModeSelector component: 400 lines (UI toggle)
+- Configuration system: 300 lines (.env + settings)
+- Tests and documentation: 600 lines
+
+**Documentation Created**: `HYBRID_AI_ARCHITECTURE.md`
 
 ### BLOCKED FLOWS
 
