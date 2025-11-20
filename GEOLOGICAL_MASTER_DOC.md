@@ -3,10 +3,19 @@
 **MYCELIAL NETWORK STATUS: This is the ONE truth document for GeoForge**
 
 **Created:** 2025-11-20  
-**Last Updated:** 2025-11-20 (PHASE 5 COMPLETE - RESOURCE ESTIMATION SYSTEM OPERATIONAL)  
+**Last Updated:** 2025-11-20 (MYCELIAL NETWORK MAPPED - ANT TEST READY)  
 **Repository:** https://github.com/jcronkdc/GeoFroge.git  
 **Base System:** FieldForge (/Users/justincronk/Desktop/FieldForge)  
-**Current Status:** ✅ PHASE 5 COMPLETE - Full Resource Estimation & 3D Block Modeling System Operational
+**Current Status:** 🟢 LOCAL DEV VERIFIED - PRODUCTION DEPLOY READY (Manual Actions Required)
+
+**🍄 MYCELIAL NETWORK STATUS:**
+- Frontend: ✅ LIVE on Vercel (https://geo-froge.vercel.app)
+- Backend: ⏳ Coded & committed but needs Render manual deploy
+- Database: ✅ Neon PostgreSQL healthy (PostGIS enabled)
+- Collaboration: ✅ LOCAL DEV READY (Daily.co + Ably API keys configured)
+- Production Endpoints: ⏳ Coded in main.py, awaiting Render deployment
+- 3D Viewers: ✅ Three.js drill holes + block model voxels working
+**Complete Map:** See `/MYCELIAL_NETWORK_STATUS_2025-11-20.md` for ant-tested pathways
 
 **🎯 MILESTONE ACHIEVED:** 
 - ✅ Python FastAPI Backend (14 endpoints)
@@ -19,8 +28,10 @@
 - ✅ Real project seeded: **Dome Mountain Gold Mine** (Blue Lagoon Resources)
 **Current Status:** Phase A1 - PRODUCTION TRACKING LIVE - Moving from Exploration to Mining Operations
 
-**🎯 CRITICAL MILESTONE:** REAL COLLABORATION DEPLOYED - Daily.co video and Ably messaging with ACTUAL API integration. No more mocks!  
-**Current Status:** Phase 2.0 Complete - REAL COLLABORATION SERVICES OPERATIONAL
+**🎯 CRITICAL MILESTONE:** REAL COLLABORATION CODED - Daily.co video and Ably messaging with ACTUAL API integration. No more mocks!  
+**Current Status:** Phase 2.0 Complete - LOCAL DEV VERIFIED (awaiting Vercel env vars for production)
+**API Keys:** ✅ Added to .env.local for local testing
+**Production Deploy:** ⏳ Need to add keys to Vercel environment variables
 
 **🎯 PHASE 4 COMPLETE (2025-11-20):** GRADE INTERPOLATION SYSTEM OPERATIONAL  
 - ✅ PyKrige geostatistical interpolation (Ordinary Kriging with spherical variogram)
@@ -47,10 +58,14 @@
 **🚀 PRODUCTION DEPLOYMENT STATUS (2025-11-20 - VERIFIED):**
 
 ### ✅ FRONTEND (Vercel)
-- **URL**: https://geoforge-ikrny6o0n-justins-projects-d7153a8c.vercel.app
-- **Status**: LIVE ✅
-- **Bundle**: 1.26 MB (289 KB gzipped)
-- **Features**: Phases 1-5 deployed (collaboration, 3D viz, resource estimation)
+- **Production URL**: https://geo-froge.vercel.app ⭐ **PUBLIC ACCESS**
+- **Deployment URL**: https://geoforge-ikrny6o0n-justins-projects-d7153a8c.vercel.app (requires Vercel auth)
+- **Status**: LIVE ✅ (Just deployed with Phase A1+A2)
+- **Bundle**: 1.28 MB (177 KB gzipped)
+- **Features**: Phases 1-5 + Phase A1 (Production) + Phase A2 (Vein Systems)
+- **Dashboard**: ✅ `/dashboard` → ProductionDashboard (30-second shift entry)
+- **Features Link**: ✅ Fixed - smooth scroll to #features section
+- **Last Deploy**: 2025-11-20 21:19 UTC
 
 ### ✅ BACKEND (Render) - FULLY OPERATIONAL
 - **URL**: https://geoforge-backend.onrender.com
@@ -69,14 +84,16 @@
 - ✅ `GET /api/projects` - Returning Dome Mountain Gold Mine
 - ✅ Resource estimation, drill holes, core logs, etc. (19 endpoints)
 
-**Production Endpoints (CODED, PENDING DEPLOY):**
-- ⏳ `GET /api/production/records` - Fetch production shifts
-- ⏳ `POST /api/production/records` - Log new shift  
-- ⏳ `GET /api/production/summary` - KPIs dashboard
-- ⏳ `GET /api/production/targets` - Monthly targets
-- ⏳ `POST /api/production/targets` - Create targets
+**Production Endpoints (CODED, AWAITING MANUAL DEPLOY):**
+- ⏳ `GET /api/production/records` - Fetch production shifts (returns 404)
+- ⏳ `POST /api/production/records` - Log new shift (returns 404)
+- ⏳ `GET /api/production/summary` - KPIs dashboard (returns 404)
+- ⏳ `GET /api/production/targets` - Monthly targets (returns 404)
+- ⏳ `POST /api/production/targets` - Create targets (returns 404)
 
-**Action Required**: Git push + Render auto-deploy → Production endpoints go live ✅
+**Action Required**: Render manual deploy via dashboard → Endpoints go live
+**Git Status**: ✅ Committed in 880c98c, pushed to origin/main
+**Issue**: Render auto-deploy didn't trigger (possibly webhook or free tier spin-down)
 
 **Status**: All mycelial veins flowing - frontend ↔ backend ↔ database ✅
 
@@ -127,6 +144,40 @@
 **Next**: Redeploy backend to Render → Connect frontend to live API → End-to-end flow complete
 
 **Status**: Backend coded, frontend ready, database seeded - awaiting deployment 🍄⛏️
+
+**🚨 MANUAL ACTIONS REQUIRED (2025-11-20):**
+
+### Action 1: Deploy Backend to Render ⏳
+**Issue:** Production endpoints return 404 (backend hasn't pulled latest commit)
+**Fix:**
+1. Go to https://dashboard.render.com/
+2. Select "geoforge-backend" service
+3. Click "Manual Deploy" → Deploy latest commit (880c98c)
+4. Wait 2-3 minutes for deployment
+5. Verify: `curl https://geoforge-backend.onrender.com/api/production/records`
+6. Expected: JSON response (not `{"detail":"Not Found"}`)
+
+### Action 2: Add Collaboration API Keys to Vercel ⏳
+**Issue:** Daily.co + Ably keys only in local .env.local, not in production
+**Fix:**
+1. Go to https://vercel.com/dashboard
+2. Select GeoForge project  
+3. Settings → Environment Variables → Add:
+   - `VITE_DAILY_API_KEY=8e48004b61c4a821639bc0e758f3b8f9a98401b6098f1d0d80edd988c742a15c`
+   - `VITE_ABLY_API_KEY=5VgiQQ.5m0sdg:09jLRjTeJpfN35J0zcRNb8CWbmNgjfaZETFk60d_fW8`
+4. Click "Redeploy" (triggers new build with env vars)
+5. Wait 2-3 minutes
+6. Verify: Open https://geo-froge.vercel.app/dashboard → Team Call → Test video/chat
+
+### Action 3: Run Human Ant Test ✅ (READY TO RUN)
+**Status:** Dev server running on http://localhost:5173/
+**API Keys:** ✅ Configured in .env.local
+**Test Suite:** See `/MYCELIAL_NETWORK_STATUS_2025-11-20.md`
+- 5 tests: Core Navigation
+- 12 tests: Collaboration (Daily.co + Ably)
+- 2 tests: Production APIs (blocked until Action 1 complete)
+
+**After completing Actions 1 & 2:** Run tests on production URLs
 
 - 📄 **Deployment Guides**: `RENDER_DEPLOYMENT_GUIDE.md`, `DEPLOYMENT_PRODUCTION.md`
 - 🧪 **Verification Script**: `test-backend.sh` (executable, ready to run)

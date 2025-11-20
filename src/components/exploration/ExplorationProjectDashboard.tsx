@@ -59,24 +59,47 @@ export const ExplorationProjectDashboard: React.FC<ExplorationProjectDashboardPr
     try {
       setLoading(true);
       
-      // API URL (use environment variable or default to localhost)
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      
+      // Try direct Supabase connection first (recommended)
       try {
-        // Try to fetch from FastAPI backend
-        const response = await fetch(`${apiUrl}/api/projects`);
+        const { dbService } = await import('../../lib/services/DatabaseService');
+        const projects = await dbService.getProjects();
         
+        // Map Supabase schema to component interface
+        const mappedProjects = projects.map(p => ({
+          id: p.id,
+          project_code: p.project_code,
+          project_name: p.project_name,
+          commodity_target: p.commodity_target || [],
+          current_phase: p.current_phase || 'planning',
+          budget_total: p.budget_total || 0,
+          budget_spent: p.budget_spent || 0,
+          location_name: p.location_name || 'Unknown',
+          latitude: p.latitude || 0,
+          longitude: p.longitude || 0,
+          status: p.status
+        }));
+        
+        setProjects(mappedProjects);
+        setLoading(false);
+        return;
+      } catch (dbError) {
+        console.warn('Failed to load from Supabase, trying FastAPI:', dbError);
+      }
+      
+      // Fallback to FastAPI backend
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      try {
+        const response = await fetch(`${apiUrl}/api/projects`);
         if (!response.ok) {
           throw new Error(`API returned ${response.status}`);
         }
-        
         const data = await response.json();
         setProjects(data.projects || []);
         setLoading(false);
       } catch (apiError) {
         console.warn('Failed to load from API, using demo data:', apiError);
         
-        // Fallback to demo data if API unavailable
+        // Fallback to demo data if both fail
         const demoProjects: Project[] = [
           {
             id: '1',

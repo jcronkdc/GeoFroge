@@ -81,94 +81,64 @@ export const DrillHoleManager: React.FC<DrillHoleManagerProps> = ({
   const [showCollaboration, setShowCollaboration] = useState(false);
   const [selectedHole, setSelectedHole] = useState<DrillHole | null>(null);
 
-  // Mock drill holes for development
-  const mockDrillHoles: DrillHole[] = [
-    {
-      id: '1',
-      hole_id: 'DDH-001',
-      hole_name: 'Golden Eagle Target 1',
-      hole_type: 'diamond',
-      project_id: projectId,
-      collar_easting: 450123.5,
-      collar_northing: 5432100.2,
-      collar_elevation: 1250.5,
-      azimuth: 90,
-      dip: -60,
-      total_depth_m: 350.5,
-      planned_depth_m: 400,
-      drill_date_start: new Date(Date.now() - 7 * 86400000).toISOString(),
-      driller_name: 'Mike Johnson',
-      status: 'drilling',
-      average_recovery_percent: 95.5
-    },
-    {
-      id: '2',
-      hole_id: 'DDH-002',
-      hole_name: 'Golden Eagle Target 1 Step-Out',
-      hole_type: 'diamond',
-      project_id: projectId,
-      collar_easting: 450223.5,
-      collar_northing: 5432150.2,
-      collar_elevation: 1248.0,
-      azimuth: 90,
-      dip: -60,
-      total_depth_m: 425.0,
-      planned_depth_m: 425,
-      drill_date_start: new Date(Date.now() - 14 * 86400000).toISOString(),
-      drill_date_end: new Date(Date.now() - 2 * 86400000).toISOString(),
-      driller_name: 'Mike Johnson',
-      status: 'completed',
-      average_recovery_percent: 97.2
-    },
-    {
-      id: '3',
-      hole_id: 'RC-001',
-      hole_name: 'Target 2 Scout',
-      hole_type: 'rc',
-      project_id: projectId,
-      collar_easting: 450500.0,
-      collar_northing: 5432000.0,
-      collar_elevation: 1265.5,
-      azimuth: 45,
-      dip: -60,
-      total_depth_m: 0,
-      planned_depth_m: 150,
-      drill_date_start: new Date(Date.now() + 3 * 86400000).toISOString(),
-      driller_name: 'Sarah Chen',
-      status: 'planned',
-      average_recovery_percent: undefined
+  // Load drill holes from database
+  const loadDrillHoles = async () => {
+    try {
+      setLoading(true);
+      const { dbService } = await import('../../lib/services/DatabaseService');
+      const holes = await dbService.getDrillHoles(projectId);
+      
+      // Map database schema to component interface
+      const mappedHoles = holes.map((h: any) => ({
+        id: h.id,
+        hole_id: h.hole_id,
+        hole_name: h.hole_name || h.hole_id,
+        hole_type: h.hole_type,
+        project_id: h.project_id,
+        collar_easting: h.collar_easting || 0,
+        collar_northing: h.collar_northing || 0,
+        collar_elevation: h.collar_elevation || 0,
+        azimuth: h.azimuth || 0,
+        dip: h.dip || 0,
+        total_depth_m: h.total_depth_m || 0,
+        planned_depth_m: h.planned_depth_m || h.total_depth_m || 0,
+        drill_date_start: h.drill_date_start,
+        drill_date_end: h.drill_date_end,
+        driller_name: h.driller_name || 'Unknown',
+        status: h.status,
+        average_recovery_percent: h.average_recovery_percent
+      }));
+      
+      setDrillHoles(mappedHoles);
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to load drill holes from database:', error);
+      setLoading(false);
+      // Set empty array on error
+      setDrillHoles([]);
     }
-  ];
+  };
 
   useEffect(() => {
     // Load project name if coming from URL
     if (urlProjectId && !propProjectName) {
-      // TODO: Load project name from API
-      setProjectName('Golden Eagle Prospect'); // Demo
+      // Load project name from database
+      const loadProjectName = async () => {
+        try {
+          const { dbService } = await import('../../lib/services/DatabaseService');
+          const project = await dbService.getProject(urlProjectId);
+          setProjectName(project.project_name);
+        } catch (error) {
+          console.error('Failed to load project name:', error);
+          setProjectName('Unknown Project');
+        }
+      };
+      loadProjectName();
     }
     
-    // Load drill holes from API
+    // Load drill holes from database
     loadDrillHoles();
   }, [projectId]);
-
-  const loadDrillHoles = async () => {
-    setLoading(true);
-    try {
-      // TODO: Replace with real API when backend ready
-      // const response = await fetch(`/api/projects/${projectId}/drill-holes`);
-      // const data = await response.json();
-      
-      // Mock data for development
-      setTimeout(() => {
-        setDrillHoles(mockDrillHoles);
-        setLoading(false);
-      }, 500);
-    } catch (error) {
-      console.error('Failed to load drill holes:', error);
-      setDrillHoles(mockDrillHoles);
-      setLoading(false);
-    }
-  };
 
   const getStatusColor = (status: string) => {
     const colors = {

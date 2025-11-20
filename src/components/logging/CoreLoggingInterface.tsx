@@ -103,102 +103,65 @@ export const CoreLoggingInterface: React.FC<CoreLoggingInterfaceProps> = ({
   const [loading, setLoading] = useState(true);
   const [showNewLogForm, setShowNewLogForm] = useState(false);
 
-  // Mock core logs for development
-  const mockCoreLogs: CoreLog[] = [
-    {
-      id: '1',
-      drill_hole_id: drillHoleId,
-      drill_hole_name: drillHoleName,
-      depth_from_m: 0,
-      depth_to_m: 15.5,
-      interval_length_m: 15.5,
-      core_recovery_percent: 100,
-      rqd_percent: 85,
-      lithology: 'Granite',
-      rock_type: 'igneous',
-      rock_color: 'pink-gray',
-      grain_size: 'medium',
-      alteration_type: ['sericitic'],
-      alteration_intensity: 'weak',
-      mineralization_present: false,
-      sample_taken: false,
-      logged_by: 'Alex Geologist',
-      logged_date: new Date().toISOString(),
-      review_status: 'approved',
-      comments: 'Fresh unaltered granite, good core quality'
-    },
-    {
-      id: '2',
-      drill_hole_id: drillHoleId,
-      drill_hole_name: drillHoleName,
-      depth_from_m: 15.5,
-      depth_to_m: 45.0,
-      interval_length_m: 29.5,
-      core_recovery_percent: 98,
-      rqd_percent: 75,
-      lithology: 'Altered Granite',
-      rock_type: 'igneous',
-      rock_color: 'gray-green',
-      grain_size: 'medium',
-      alteration_type: ['sericitic', 'chloritic'],
-      alteration_intensity: 'moderate',
-      mineralization_present: true,
-      mineralization_type: ['disseminated', 'vein'],
-      mineral_species: ['pyrite', 'chalcopyrite'],
-      visible_gold: false,
-      sample_taken: true,
-      sample_ids: ['DDH001-001', 'DDH001-002'],
-      logged_by: 'Alex Geologist',
-      logged_date: new Date().toISOString(),
-      review_status: 'reviewed',
-      comments: 'Moderate alteration with 2-3% disseminated pyrite and trace chalcopyrite. Two samples taken.'
-    },
-    {
-      id: '3',
-      drill_hole_id: drillHoleId,
-      drill_hole_name: drillHoleName,
-      depth_from_m: 45.0,
-      depth_to_m: 75.5,
-      interval_length_m: 30.5,
-      core_recovery_percent: 95,
-      rqd_percent: 60,
-      lithology: 'Quartz Vein + Altered Granite',
-      rock_type: 'igneous',
-      rock_color: 'white-gray',
-      grain_size: 'medium',
-      alteration_type: ['silicic', 'sericitic'],
-      alteration_intensity: 'strong',
-      mineralization_present: true,
-      mineralization_type: ['vein', 'disseminated'],
-      mineral_species: ['pyrite', 'chalcopyrite', 'gold'],
-      visible_gold: true,
-      sample_taken: true,
-      sample_ids: ['DDH001-003', 'DDH001-004', 'DDH001-005'],
-      logged_by: 'Alex Geologist',
-      logged_date: new Date().toISOString(),
-      review_status: 'draft',
-      comments: '⭐ VISIBLE GOLD! Multiple 5-15cm quartz veins with 3-5% pyrite and visible gold. Strong silicification. Three samples taken. PRIORITY ASSAY.'
-    }
-  ];
-
   useEffect(() => {
     loadCoreLogs();
+    loadDrillHoleDetails();
   }, [drillHoleId]);
+
+  const loadDrillHoleDetails = async () => {
+    try {
+      const { dbService } = await import('../../lib/services/DatabaseService');
+      const hole = await dbService.getDrillHole(drillHoleId);
+      setDrillHoleName(hole.hole_name || hole.hole_id);
+      setProjectId(hole.project_id);
+      
+      // Load project name
+      const project = await dbService.getProject(hole.project_id);
+      setProjectName(project.project_name);
+    } catch (error) {
+      console.error('Failed to load drill hole details:', error);
+    }
+  };
 
   const loadCoreLogs = async () => {
     setLoading(true);
     try {
-      // TODO: Replace with real API
-      // const response = await fetch(`/api/drill-holes/${drillHoleId}/core-logs`);
-      // const data = await response.json();
+      const { dbService } = await import('../../lib/services/DatabaseService');
+      const logs = await dbService.getCoreLogs(drillHoleId);
       
-      setTimeout(() => {
-        setCoreLogs(mockCoreLogs);
-        setLoading(false);
-      }, 500);
+      // Map database schema to component interface
+      const mappedLogs = logs.map((log: any) => ({
+        id: log.id,
+        drill_hole_id: log.drill_hole_id,
+        drill_hole_name: drillHoleName,
+        depth_from_m: log.depth_from_m,
+        depth_to_m: log.depth_to_m,
+        interval_length_m: log.interval_length_m,
+        core_recovery_percent: log.core_recovery_percent,
+        rqd_percent: log.rqd_percent,
+        lithology: log.lithology,
+        rock_type: log.rock_type,
+        rock_color: log.rock_color,
+        grain_size: log.grain_size,
+        alteration_type: log.alteration_type || [],
+        alteration_intensity: log.alteration_intensity,
+        mineralization_present: log.mineralization_present,
+        mineralization_type: log.mineralization_type || [],
+        mineral_species: log.mineral_species || [],
+        visible_gold: log.visible_gold,
+        sample_taken: log.sample_taken,
+        sample_ids: log.sample_ids || [],
+        logged_by: log.logged_by || 'Unknown',
+        logged_date: log.logged_date,
+        review_status: log.review_status,
+        comments: log.comments
+      }));
+      
+      setCoreLogs(mappedLogs);
+      setLoading(false);
     } catch (error) {
       console.error('Failed to load core logs:', error);
-      setCoreLogs(mockCoreLogs);
+      setCoreLogs([]);
       setLoading(false);
     }
   };

@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import LandingPage from './components/landing/LandingPage';
+import UnifiedDashboard from './components/UnifiedDashboard';
 import { ExplorationProjectDashboard } from './components/exploration/ExplorationProjectDashboard';
 import { DrillHoleManager } from './components/drilling/DrillHoleManager';
 import { CoreLoggingInterface } from './components/logging/CoreLoggingInterface';
@@ -46,8 +47,8 @@ function App() {
         {/* Landing Page */}
         <Route path="/" element={<LandingPage />} />
         
-        {/* Main Dashboard - Now shows Production Dashboard */}
-        <Route path="/dashboard" element={<ProductionDashboard />} />
+        {/* Main Dashboard - Unified hub with all modules */}
+        <Route path="/dashboard" element={<UnifiedDashboard />} />
         
         {/* Exploration Dashboard */}
         <Route path="/exploration" element={<ExplorationProjectDashboard />} />
