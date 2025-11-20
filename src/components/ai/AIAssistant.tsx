@@ -60,23 +60,40 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
     if (isOpen && messages.length === 0) {
       const welcomeMessage: AIMessage = {
         role: 'assistant',
-        content: `# 🤖 Welcome to GeoForge AI Assistant (God Mode)
+        content: `# 🤖 GeoForge AI Assistant (God Mode) - Fully Educated!
 
-I can help you with:
+I now know EVERYTHING about GeoForge's 8 modules and can help you with:
 
-🧭 **Navigate** - Take you anywhere in the app
-❓ **Explain** - Show you how to use any feature  
-📊 **Analyze** - Review your geological data
-📄 **Documents** - Analyze reports and files
-💬 **Chat** - Answer any geology questions
+🧭 **Navigate Anywhere**
+- "Take me to Production Tracking"
+- "Show me Drill Holes"
+- "Open Resource Estimation"
 
-**Try asking:**
-- "Take me to drill holes"
-- "How do I create a core log?"
+💬 **Answer Questions**
+- "What is lithology?" (geology terms)
+- "What's the weather in Smithers?" (web search)
+- "Tell me about kriging"
+
+📝 **Explain Workflows**
+- "How do I log a shift?"
+- "How do I create a block model?"
+- "How do I start a video call?"
+
+📊 **Analyze Data**
 - "Analyze my project data"
-- "What is lithology classification?"
+- "Review this document"
 
-What would you like to do?`,
+**Available Modules:**
+1. Production Tracking - Daily shift logging
+2. Vein Systems - Track 10+ veins
+3. Drill Holes - 596 holes in 3D viewer
+4. Core Logging - AI-assisted logging
+5. Resource Estimation - 400k voxels
+6. Grade Interpolation - PyKrige geostatistics
+7. Geophysics - Mag, gravity, IP surveys
+8. Collaboration - Video + team chat
+
+**Try asking me anything!** I'm here to help 24/7.`,
         timestamp: new Date()
       };
       setMessages([welcomeMessage]);
@@ -100,19 +117,35 @@ What would you like to do?`,
       // Check if navigation command
       const navCommand = aiService.parseNavigationCommand(inputValue);
       if (navCommand) {
-        // Handle navigation
-        const response: AIMessage = {
-          role: 'assistant',
-          content: `Navigating to ${navCommand.target}... ✨`,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, response]);
-        
-        // Navigate (with delay for user to see message)
-        setTimeout(() => {
-          navigate(navCommand.target);
-          setIsOpen(false); // Close assistant after navigation
-        }, 1000);
+        // Handle special actions
+        if (navCommand.action === 'openCollaboration') {
+          const response: AIMessage = {
+            role: 'assistant',
+            content: `Opening Team Collaboration Hub... ✨\n\nYou can now:\n- Send team messages\n- Start video calls\n- Share your screen\n- Use emergency alerts`,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, response]);
+          
+          // Emit custom event for parent to open collaboration
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('openCollaboration'));
+            setIsOpen(false);
+          }, 1000);
+        } else {
+          // Handle regular navigation
+          const response: AIMessage = {
+            role: 'assistant',
+            content: `Navigating to ${navCommand.target}... ✨`,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, response]);
+          
+          // Navigate (with delay for user to see message)
+          setTimeout(() => {
+            navigate(navCommand.target);
+            setIsOpen(false); // Close assistant after navigation
+          }, 1000);
+        }
       } else {
         // Regular AI chat
         const aiResponse = await aiService.chat(inputValue);
@@ -397,7 +430,7 @@ What would you like to do?`,
               <div className="flex items-center gap-1">
                 <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
                 <span className="text-xs text-gray-400">
-                  {aiService.getSystemStatus().engines.filter(e => e.available).length} engines active
+                  {aiService.getSystemStatus().engines.filter((e: any) => e.available).length} engines active
                 </span>
               </div>
             </div>
