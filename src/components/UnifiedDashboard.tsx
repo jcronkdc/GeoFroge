@@ -44,7 +44,7 @@ export default function UnifiedDashboard() {
       icon: <Mountain className="w-8 h-8" />,
       title: "Vein Systems",
       description: "10 veins tracked, Boulder Vein producing",
-      path: "/veins",
+      path: "/projects/dome-mountain/veins",
       color: "from-emerald-500 to-teal-500",
       badge: "NEW",
       stats: "15,000 oz Au/year target"
@@ -61,7 +61,7 @@ export default function UnifiedDashboard() {
       icon: <FileText className="w-8 h-8" />,
       title: "Core Logging",
       description: "Lithology, alteration, mineralization",
-      path: "/core-logs",
+      path: "/exploration", // Goes to exploration first, then to drill holes
       color: "from-purple-500 to-pink-500",
       stats: "AI-assisted logging"
     },
@@ -69,7 +69,7 @@ export default function UnifiedDashboard() {
       icon: <Layers className="w-8 h-8" />,
       title: "Resource Estimation",
       description: "3D block models, M/I/I classification",
-      path: "/resource-estimation",
+      path: "/projects/dome-mountain/resource-estimation",
       color: "from-amber-500 to-orange-500",
       stats: "234,000 oz Au total"
     },
@@ -77,7 +77,7 @@ export default function UnifiedDashboard() {
       icon: <BarChart3 className="w-8 h-8" />,
       title: "Grade Interpolation",
       description: "PyKrige geostatistics, variograms",
-      path: "/grade-interpolation",
+      path: "/projects/dome-mountain/grade-interpolation",
       color: "from-green-500 to-emerald-500",
       stats: "2D/3D interpolation"
     },
@@ -85,7 +85,7 @@ export default function UnifiedDashboard() {
       icon: <MapPin className="w-8 h-8" />,
       title: "Geophysics",
       description: "Mag, gravity, IP, EM surveys",
-      path: "/geophysics",
+      path: "/projects/dome-mountain/geophysics",
       color: "from-indigo-500 to-blue-500",
       stats: "2020 airborne survey"
     },
@@ -93,7 +93,7 @@ export default function UnifiedDashboard() {
       icon: <Users className="w-8 h-8" />,
       title: "Collaboration",
       description: "Video calls, team chat, screen share",
-      path: "/collaboration",
+      action: "openCollaboration", // Special action instead of path
       color: "from-pink-500 to-rose-500",
       stats: "Daily.co + Ably"
     }
@@ -170,7 +170,13 @@ export default function UnifiedDashboard() {
             {modules.map((module, idx) => (
               <button
                 key={idx}
-                onClick={() => navigate(module.path)}
+                onClick={() => {
+                  if (module.action === 'openCollaboration') {
+                    setShowCollaboration(true);
+                  } else if (module.path) {
+                    navigate(module.path);
+                  }
+                }}
                 className="group relative bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700 hover:border-slate-600 transition-all hover:scale-105"
               >
                 {/* Badge */}

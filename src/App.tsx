@@ -72,6 +72,12 @@ function App() {
         {/* Resource Estimation Dashboard - Phase 5 */}
         <Route path="/projects/:projectId/resource-estimation" element={<ResourceEstimationDashboardWrapper />} />
         
+        {/* Vein Systems - Phase A2 (Coming Soon placeholder) */}
+        <Route path="/projects/:projectId/veins" element={<ProductionDashboard />} />
+        
+        {/* Geophysics (Coming Soon placeholder) */}
+        <Route path="/projects/:projectId/geophysics" element={<ExplorationProjectDashboard />} />
+        
         {/* Default redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
