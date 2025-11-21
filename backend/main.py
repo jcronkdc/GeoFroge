@@ -2327,6 +2327,303 @@ def get_geophysics_summary(project_id: str):
         raise HTTPException(status_code=500, detail=f"Failed to fetch geophysics summary: {str(e)}")
 
 
+# ==================== PROJECT MEMBERSHIP ENDPOINTS (INVITE-ONLY GROUPS) ====================
+
+class ProjectMemberCreate(BaseModel):
+    project_id: str
+    user_id: str
+    role: str = "viewer"
+    can_invite_others: bool = False
+    invited_by: Optional[str] = None
+
+class ProjectInvitationCreate(BaseModel):
+    project_id: str
+    invitee_email: str
+    invitee_name: Optional[str] = None
+    role: str = "viewer"
+    invited_by: str
+    invitation_message: Optional[str] = None
+
+class CollaborationSessionCreate(BaseModel):
+    project_id: str
+    session_type: str  # 'video', 'chat', 'screen_share', 'cursor_control'
+    session_title: Optional[str] = None
+    session_context: Optional[str] = None
+    started_by: str
+    daily_room_url: Optional[str] = None
+    ably_channel_name: Optional[str] = None
+
+
+@app.get("/api/projects/{project_id}/members")
+def get_project_members(project_id: str):
+    """Get all members of a project (invite-only group)"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT * FROM v_project_members_extended
+            WHERE project_id = %s
+            ORDER BY 
+                CASE role
+                    WHEN 'owner' THEN 1
+                    WHEN 'admin' THEN 2
+                    WHEN 'geologist' THEN 3
+                    WHEN 'engineer' THEN 4
+                    WHEN 'viewer' THEN 5
+                END,
+                joined_at ASC
+        """, (project_id,))
+        
+        members = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        return {"members": members, "count": len(members)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch project members: {str(e)}")
+
+
+@app.post("/api/projects/{project_id}/members")
+def add_project_member(project_id: str, member: ProjectMemberCreate):
+    """Add a new member to a project (requires admin/owner role)"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Check if already a member
+        cur.execute("""
+            SELECT id FROM project_members 
+            WHERE project_id = %s AND user_id = %s
+        """, (project_id, member.user_id))
+        
+        existing = cur.fetchone()
+        if existing:
+            raise HTTPException(status_code=400, detail="User is already a project member")
+        
+        # Add member
+        cur.execute("""
+            INSERT INTO project_members (
+                project_id, user_id, role, invited_by,
+                can_invite_others, invitation_status
+            ) VALUES (%s, %s, %s, %s, %s, 'accepted')
+            RETURNING id, user_id, role, joined_at
+        """, (
+            project_id,
+            member.user_id,
+            member.role,
+            member.invited_by,
+            member.can_invite_others
+        ))
+        
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": "Member added to project",
+            "member": result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to add project member: {str(e)}")
+
+
+@app.delete("/api/projects/{project_id}/members/{user_id}")
+def remove_project_member(project_id: str, user_id: str):
+    """Remove a member from a project (requires admin/owner role)"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Cannot remove owner
+        cur.execute("""
+            SELECT role FROM project_members
+            WHERE project_id = %s AND user_id = %s
+        """, (project_id, user_id))
+        
+        member = cur.fetchone()
+        if not member:
+            raise HTTPException(status_code=404, detail="Member not found")
+        
+        if member['role'] == 'owner':
+            raise HTTPException(status_code=403, detail="Cannot remove project owner")
+        
+        # Remove member
+        cur.execute("""
+            DELETE FROM project_members
+            WHERE project_id = %s AND user_id = %s
+        """, (project_id, user_id))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return {"success": True, "message": "Member removed from project"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to remove project member: {str(e)}")
+
+
+@app.post("/api/projects/{project_id}/invitations")
+def send_project_invitation(project_id: str, invitation: ProjectInvitationCreate):
+    """Send an invitation to join a project"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Generate unique invitation token
+        import secrets
+        token = secrets.token_urlsafe(32)
+        
+        cur.execute("""
+            INSERT INTO project_invitations (
+                project_id, invitee_email, invitee_name, role,
+                invited_by, invitation_message, invitation_token
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+            RETURNING id, invitation_token, expires_at
+        """, (
+            project_id,
+            invitation.invitee_email,
+            invitation.invitee_name,
+            invitation.role,
+            invitation.invited_by,
+            invitation.invitation_message,
+            token
+        ))
+        
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": "Invitation sent",
+            "invitation_token": result['invitation_token'],
+            "expires_at": result['expires_at']
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send invitation: {str(e)}")
+
+
+@app.get("/api/projects/{project_id}/invitations")
+def get_project_invitations(project_id: str):
+    """Get all pending invitations for a project"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT * FROM v_pending_invitations
+            WHERE project_id = %s
+            ORDER BY created_at DESC
+        """, (project_id,))
+        
+        invitations = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        return {"invitations": invitations, "count": len(invitations)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch invitations: {str(e)}")
+
+
+@app.post("/api/projects/{project_id}/collaboration/sessions")
+def start_collaboration_session(project_id: str, session: CollaborationSessionCreate):
+    """Start a new collaboration session (video/chat)"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            INSERT INTO collaboration_sessions (
+                project_id, session_type, session_title, session_context,
+                started_by, daily_room_url, ably_channel_name, participants
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, ARRAY[%s])
+            RETURNING id, session_type, started_at
+        """, (
+            project_id,
+            session.session_type,
+            session.session_title,
+            session.session_context,
+            session.started_by,
+            session.daily_room_url,
+            session.ably_channel_name,
+            session.started_by  # Add starter to participants array
+        ))
+        
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": "Collaboration session started",
+            "session": result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to start collaboration session: {str(e)}")
+
+
+@app.get("/api/projects/{project_id}/collaboration/sessions")
+def get_collaboration_sessions(project_id: str, active_only: bool = True):
+    """Get collaboration sessions for a project"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        if active_only:
+            cur.execute("""
+                SELECT * FROM v_active_collaboration_sessions
+                WHERE project_id = %s
+            """, (project_id,))
+        else:
+            cur.execute("""
+                SELECT * FROM collaboration_sessions
+                WHERE project_id = %s
+                ORDER BY started_at DESC
+                LIMIT 50
+            """, (project_id,))
+        
+        sessions = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        return {"sessions": sessions, "count": len(sessions)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch collaboration sessions: {str(e)}")
+
+
+@app.put("/api/collaboration/sessions/{session_id}/end")
+def end_collaboration_session(session_id: str):
+    """End a collaboration session"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            UPDATE collaboration_sessions
+            SET status = 'ended', ended_at = NOW()
+            WHERE id = %s
+            RETURNING id, status, ended_at
+        """, (session_id,))
+        
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": "Session ended",
+            "session": result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to end collaboration session: {str(e)}")
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
