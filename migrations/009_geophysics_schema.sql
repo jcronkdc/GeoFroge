@@ -210,6 +210,7 @@ CREATE INDEX idx_survey_line_files_line ON survey_line_files(line_id);
 CREATE OR REPLACE VIEW v_geophysics_survey_summary AS
 SELECT 
     gs.id,
+    gs.project_id,
     gs.survey_name,
     gs.survey_type,
     gs.survey_date,
