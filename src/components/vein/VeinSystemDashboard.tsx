@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Mountain, Plus, TrendingUp, Layers, MapPin, Video, X, Save, Edit2, Trash2 } from 'lucide-react';
 import { CollaborationHub } from '../collaboration/CollaborationHub';
+import { veinService, VeinSummary, CreateVeinRequest } from '../../lib/services/VeinService';
+import toast from 'react-hot-toast';
 
 /**
  * VEIN SYSTEMS DASHBOARD - Dome Mountain Gold Mine
@@ -10,6 +12,8 @@ import { CollaborationHub } from '../collaboration/CollaborationHub';
  * 
  * Human Test: "Can I add a vein and see it in the table?"
  * Mycelial Design: Vein → Geometry → Mineralization → Production tracking
+ * 
+ * PATHWAY: Frontend (React) → VeinService → Backend (Render) → Database (Neon)
  */
 
 interface Vein {
@@ -70,19 +74,53 @@ export default function VeinSystemDashboard() {
     notes: ''
   });
 
-  // Load vein data
+  // Load vein data from backend API
   useEffect(() => {
     const fetchVeins = async () => {
       try {
-        // Backend API call (when ready)
-        // const response = await fetch('/api/veins?project_id=dome-mountain');
-        // const data = await response.json();
+        setLoading(true);
         
-        // Mock data - Real Dome Mountain veins from 2022 MRE
+        // Real API call to backend - Dome Mountain project ID from master doc
+        const projectId = 'b97a4152-6462-4fdd-8393-0b678da5c725';
+        const veinSummaries = await veinService.getVeins(projectId);
+        
+        // Transform API data to UI format
+        const transformedVeins: Vein[] = veinSummaries.map((v: VeinSummary) => ({
+          id: v.id,
+          name: v.vein_name,
+          type: 'quartz' as const, // Default, would need full vein data for actual type
+          strike: 0, // Would need full vein data
+          dip: 0, // Would need full vein data
+          width_min: 0,
+          width_max: 0,
+          width_avg: v.average_width_m || 0,
+          length: v.strike_length_m || 0,
+          depth_extent: 0,
+          au_grade_avg: v.avg_au_grade_gt || 0,
+          ag_grade_avg: 0,
+          mineralization: [],
+          alteration: [],
+          status: (v.production_status as any) || 'exploration',
+          intersections: v.intersection_count || 0,
+          discovery_date: new Date().toISOString().split('T')[0],
+          notes: ''
+        }));
+        
+        setVeins(transformedVeins);
+        setLoading(false);
+        
+        if (transformedVeins.length > 0) {
+          toast.success(`Loaded ${transformedVeins.length} vein systems from database`);
+        }
+      } catch (error) {
+        console.error('Failed to fetch veins:', error);
+        toast.error('Failed to load vein data. Using offline mode.');
+        
+        // Fallback to mock data if API fails
         setVeins([
           {
-            id: '1',
-            name: 'Boulder Vein',
+            id: 'mock-1',
+            name: 'Boulder Vein (Offline)',
             type: 'quartz',
             strike: 45,
             dip: 65,
@@ -93,99 +131,16 @@ export default function VeinSystemDashboard() {
             depth_extent: 350,
             au_grade_avg: 10.32,
             ag_grade_avg: 55.2,
-            mineralization: ['pyrite', 'chalcopyrite', 'galena', 'gold-native'],
+            mineralization: ['pyrite', 'chalcopyrite', 'galena'],
             alteration: ['silicification', 'sericitization'],
             status: 'production',
             production_tonnes: 42.5,
             intersections: 45,
             discovery_date: '2020-06-15',
-            notes: 'Primary producing vein - first production shift July 2025'
-          },
-          {
-            id: '2',
-            name: 'Discovery Vein',
-            type: 'quartz-sulfide',
-            strike: 52,
-            dip: 70,
-            width_min: 0.3,
-            width_max: 2.5,
-            width_avg: 1.2,
-            length: 380,
-            depth_extent: 300,
-            au_grade_avg: 8.15,
-            ag_grade_avg: 42.8,
-            mineralization: ['pyrite', 'arsenopyrite', 'gold-native'],
-            alteration: ['silicification', 'chloritization'],
-            status: 'development',
-            intersections: 38,
-            discovery_date: '2019-08-22',
-            notes: 'Next target for production - high grade intersections at depth'
-          },
-          {
-            id: '3',
-            name: 'Lyle Vein',
-            type: 'epithermal',
-            strike: 38,
-            dip: 75,
-            width_min: 0.2,
-            width_max: 1.8,
-            width_avg: 0.9,
-            length: 280,
-            depth_extent: 200,
-            au_grade_avg: 6.02,
-            ag_grade_avg: 31.5,
-            mineralization: ['pyrite', 'galena', 'silver-native'],
-            alteration: ['argillic', 'silicification'],
-            status: 'exploration',
-            intersections: 22,
-            discovery_date: '2020-11-10',
-            notes: 'Epithermal style - potential for expansion at depth'
-          },
-          {
-            id: '4',
-            name: 'North Extension',
-            type: 'quartz',
-            strike: 48,
-            dip: 68,
-            width_min: 0.4,
-            width_max: 2.0,
-            width_avg: 1.1,
-            length: 320,
-            depth_extent: 250,
-            au_grade_avg: 7.45,
-            ag_grade_avg: 38.6,
-            mineralization: ['pyrite', 'chalcopyrite', 'gold-native'],
-            alteration: ['silicification', 'sericitization'],
-            status: 'exploration',
-            intersections: 18,
-            discovery_date: '2021-05-03',
-            notes: 'Northern extension of Boulder Vein system'
-          },
-          {
-            id: '5',
-            name: 'South Vein',
-            type: 'quartz-sulfide',
-            strike: 42,
-            dip: 62,
-            width_min: 0.3,
-            width_max: 1.5,
-            width_avg: 0.8,
-            length: 200,
-            depth_extent: 180,
-            au_grade_avg: 5.28,
-            ag_grade_avg: 28.4,
-            mineralization: ['pyrite', 'sphalerite', 'galena'],
-            alteration: ['chloritization', 'carbonatization'],
-            status: 'exploration',
-            intersections: 12,
-            discovery_date: '2021-09-18',
-            notes: 'Southern parallel structure - requires more drilling'
+            notes: 'Offline mode - API unavailable'
           }
         ]);
         
-        setLoading(false);
-      } catch (error) {
-        console.error('Failed to fetch veins:', error);
         setLoading(false);
       }
     };
@@ -193,28 +148,78 @@ export default function VeinSystemDashboard() {
     fetchVeins();
   }, []);
 
-  const handleAddVein = () => {
-    const newVein: Vein = {
-      ...formData as Omit<Vein, 'id'>,
-      id: Date.now().toString()
-    };
-    
-    setVeins([...veins, newVein]);
-    setShowAddVein(false);
-    resetForm();
-    
-    // Backend API call (when ready)
-    // await fetch('/api/veins', { method: 'POST', body: JSON.stringify(newVein) });
+  const handleAddVein = async () => {
+    try {
+      // Prepare API request
+      const projectId = 'b97a4152-6462-4fdd-8393-0b678da5c725'; // Dome Mountain
+      
+      const createRequest: CreateVeinRequest = {
+        project_id: projectId,
+        vein_name: formData.name || '',
+        vein_code: formData.name?.substring(0, 2).toUpperCase() + '-' + Math.floor(Math.random() * 100),
+        vein_type: formData.type,
+        strike: formData.strike,
+        dip: formData.dip,
+        dip_direction: 'NW', // Could add to form
+        average_width_m: formData.width_avg,
+        min_width_m: formData.width_min,
+        max_width_m: formData.width_max,
+        strike_length_m: formData.length,
+        vertical_extent_m: formData.depth_extent,
+        avg_au_grade_gt: formData.au_grade_avg,
+        avg_ag_grade_gt: formData.ag_grade_avg,
+        production_status: formData.status,
+        discovery_date: formData.discovery_date,
+        description: formData.notes
+      };
+      
+      // Call API to create vein
+      const createdVein = await veinService.createVein(createRequest);
+      
+      // Add to local state
+      const newVein: Vein = {
+        id: createdVein.id,
+        name: formData.name || '',
+        type: formData.type || 'quartz',
+        strike: formData.strike || 0,
+        dip: formData.dip || 0,
+        width_min: formData.width_min || 0,
+        width_max: formData.width_max || 0,
+        width_avg: formData.width_avg || 0,
+        length: formData.length || 0,
+        depth_extent: formData.depth_extent || 0,
+        au_grade_avg: formData.au_grade_avg || 0,
+        ag_grade_avg: formData.ag_grade_avg || 0,
+        mineralization: formData.mineralization || [],
+        alteration: formData.alteration || [],
+        status: formData.status || 'exploration',
+        intersections: formData.intersections || 0,
+        discovery_date: formData.discovery_date || new Date().toISOString().split('T')[0],
+        notes: formData.notes || ''
+      };
+      
+      setVeins([...veins, newVein]);
+      setShowAddVein(false);
+      resetForm();
+      
+      toast.success(`Vein "${newVein.name}" created successfully`);
+    } catch (error) {
+      console.error('Failed to create vein:', error);
+      toast.error('Failed to create vein. Check console for details.');
+    }
   };
 
-  const handleUpdateVein = () => {
+  const handleUpdateVein = async () => {
     if (!editingVein) return;
     
+    // Local update (API update endpoint would go here)
     setVeins(veins.map(v => v.id === editingVein.id ? { ...editingVein, ...formData } : v));
     setEditingVein(null);
     resetForm();
     
-    // Backend API call (when ready)
+    toast.success('Vein updated (local only - backend update endpoint needed)');
+    
+    // Backend API call (PUT endpoint not yet implemented)
     // await fetch(`/api/veins/${editingVein.id}`, { method: 'PUT', body: JSON.stringify(formData) });
   };
 
@@ -222,7 +227,9 @@ export default function VeinSystemDashboard() {
     if (confirm('Are you sure you want to delete this vein?')) {
       setVeins(veins.filter(v => v.id !== id));
       
-      // Backend API call (when ready)
+      toast.success('Vein deleted (local only - backend delete endpoint needed)');
+      
+      // Backend API call (DELETE endpoint not yet implemented)
       // await fetch(`/api/veins/${id}`, { method: 'DELETE' });
     }
   };

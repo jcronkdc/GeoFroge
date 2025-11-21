@@ -1721,6 +1721,261 @@ def create_production_target(target: ProductionTargetCreate):
 
 
 # ==========================================
+# VEIN SYSTEMS ENDPOINTS (Phase A2)
+# For: Vein tracking at Dome Mountain
+# ==========================================
+
+class VeinSystemCreate(BaseModel):
+    project_id: str
+    vein_name: str
+    vein_code: Optional[str] = None
+    vein_type: Optional[str] = None
+    strike: Optional[float] = None
+    dip: Optional[float] = None
+    dip_direction: Optional[str] = None
+    average_width_m: Optional[float] = None
+    min_width_m: Optional[float] = None
+    max_width_m: Optional[float] = None
+    strike_length_m: Optional[float] = None
+    vertical_extent_m: Optional[float] = None
+    avg_au_grade_gt: Optional[float] = None
+    avg_ag_grade_gt: Optional[float] = None
+    production_status: Optional[str] = 'exploration'
+    discovery_date: Optional[str] = None
+    description: Optional[str] = None
+
+
+class VeinIntersectionCreate(BaseModel):
+    vein_id: str
+    drill_hole_id: Optional[str] = None
+    hole_id: Optional[str] = None
+    intersection_number: Optional[int] = 1
+    depth_from_m: float
+    depth_to_m: float
+    true_width_m: Optional[float] = None
+    au_grade_gt: Optional[float] = None
+    ag_grade_gt: Optional[float] = None
+    visible_gold: Optional[bool] = False
+    notes: Optional[str] = None
+
+
+@app.get("/api/veins")
+def get_veins(project_id: Optional[str] = None):
+    """Get all vein systems, optionally filtered by project"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        if project_id:
+            cur.execute("""
+                SELECT * FROM v_vein_summary
+                WHERE project_id = %s
+                ORDER BY priority_rank NULLS LAST, avg_au_grade_gt DESC NULLS LAST
+            """, (project_id,))
+        else:
+            cur.execute("""
+                SELECT * FROM v_vein_summary
+                ORDER BY priority_rank NULLS LAST, avg_au_grade_gt DESC NULLS LAST
+            """)
+        
+        veins = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        return {"veins": veins, "count": len(veins)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch veins: {str(e)}")
+
+
+@app.get("/api/veins/{vein_id}")
+def get_vein(vein_id: str):
+    """Get single vein system by ID"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT 
+                id, project_id, vein_name, vein_code, vein_type,
+                strike, dip, dip_direction,
+                average_width_m, min_width_m, max_width_m,
+                strike_length_m, vertical_extent_m,
+                mineralization_type, dominant_minerals, alteration_type,
+                avg_au_grade_gt, avg_ag_grade_gt,
+                max_au_grade_gt, max_ag_grade_gt,
+                discovery_date, discovered_by,
+                drilling_status, intersections_count,
+                production_status, in_current_mine_plan,
+                estimated_tonnes, estimated_au_ounces,
+                description, geological_notes,
+                exploration_potential, priority_rank,
+                created_at, updated_at
+            FROM vein_systems
+            WHERE id = %s
+        """, (vein_id,))
+        
+        vein = cur.fetchone()
+        cur.close()
+        conn.close()
+        
+        if not vein:
+            raise HTTPException(status_code=404, detail="Vein not found")
+        
+        return {"vein": vein}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch vein: {str(e)}")
+
+
+@app.post("/api/veins")
+def create_vein(vein: VeinSystemCreate):
+    """Create a new vein system"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            INSERT INTO vein_systems (
+                project_id, vein_name, vein_code, vein_type,
+                strike, dip, dip_direction,
+                average_width_m, min_width_m, max_width_m,
+                strike_length_m, vertical_extent_m,
+                avg_au_grade_gt, avg_ag_grade_gt,
+                production_status, discovery_date, description
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id, vein_name, vein_code, created_at
+        """, (
+            vein.project_id, vein.vein_name, vein.vein_code, vein.vein_type,
+            vein.strike, vein.dip, vein.dip_direction,
+            vein.average_width_m, vein.min_width_m, vein.max_width_m,
+            vein.strike_length_m, vein.vertical_extent_m,
+            vein.avg_au_grade_gt, vein.avg_ag_grade_gt,
+            vein.production_status, vein.discovery_date, vein.description
+        ))
+        
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": "Vein system created",
+            "vein": result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create vein: {str(e)}")
+
+
+@app.get("/api/veins/{vein_id}/intersections")
+def get_vein_intersections(vein_id: str):
+    """Get drill hole intersections for a vein"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            SELECT 
+                id, vein_id, drill_hole_id, hole_id,
+                intersection_number, depth_from_m, depth_to_m,
+                intersection_length_m, true_width_m, alpha_angle,
+                au_grade_gt, ag_grade_gt, au_gt_m, ag_gt_m,
+                visible_gold, sulfide_percent, vein_texture,
+                core_recovery_percent, verified, notes,
+                created_at
+            FROM vein_intersections
+            WHERE vein_id = %s
+            ORDER BY au_grade_gt DESC NULLS LAST
+        """, (vein_id,))
+        
+        intersections = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        return {"intersections": intersections, "count": len(intersections)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch intersections: {str(e)}")
+
+
+@app.post("/api/veins/intersections")
+def create_vein_intersection(intersection: VeinIntersectionCreate):
+    """Create a new vein intersection"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        cur.execute("""
+            INSERT INTO vein_intersections (
+                vein_id, drill_hole_id, hole_id, intersection_number,
+                depth_from_m, depth_to_m, true_width_m,
+                au_grade_gt, ag_grade_gt, visible_gold, notes
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id, hole_id, depth_from_m, depth_to_m, au_grade_gt
+        """, (
+            intersection.vein_id,
+            intersection.drill_hole_id,
+            intersection.hole_id,
+            intersection.intersection_number,
+            intersection.depth_from_m,
+            intersection.depth_to_m,
+            intersection.true_width_m,
+            intersection.au_grade_gt,
+            intersection.ag_grade_gt,
+            intersection.visible_gold,
+            intersection.notes
+        ))
+        
+        result = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": "Vein intersection created",
+            "intersection": result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create intersection: {str(e)}")
+
+
+@app.get("/api/veins/high-grade")
+def get_high_grade_intersections(project_id: Optional[str] = None, min_grade: float = 5.0):
+    """Get high-grade vein intersections"""
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        query = """
+            SELECT 
+                vi.id, vs.vein_name, vs.vein_code, vi.hole_id,
+                vi.depth_from_m, vi.depth_to_m, vi.intersection_length_m,
+                vi.true_width_m, vi.au_grade_gt, vi.ag_grade_gt,
+                vi.au_gt_m, vi.visible_gold
+            FROM vein_intersections vi
+            JOIN vein_systems vs ON vi.vein_id = vs.id
+            WHERE vi.au_grade_gt >= %s
+        """
+        params = [min_grade]
+        
+        if project_id:
+            query += " AND vs.project_id = %s"
+            params.append(project_id)
+        
+        query += " ORDER BY vi.au_grade_gt DESC"
+        
+        cur.execute(query, params)
+        intersections = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        return {"intersections": intersections, "count": len(intersections)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch high-grade intersections: {str(e)}")
+
+
+# ==========================================
 # GEOPHYSICS ENDPOINTS (Phase A3)
 # For: Geophysical Survey Management
 # ==========================================
